@@ -40,14 +40,15 @@
   const { useState, useEffect, useRef, Suspense } = React; 
 
   /* ---------------------------------------------------------
-       CUSTOM CURSOR
+       CUSTOM CURSOR (FIXED)
   --------------------------------------------------------- */
   function CustomCursor() {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
 
     useEffect(() => {
-      const move = e => { x.clientX); y.set(e.clientY); };
+      // 🟢 THIS LINE IS NOW CORRECTED: x.set(e.clientX); y.set(e.clientY);
+      const move = e => { x.set(e.clientX); y.set(e.clientY); }; 
       window.addEventListener("mousemove", move);
       return () => window.removeEventListener("mousemove", move);
     }, []);
@@ -236,7 +237,7 @@
     );
   }
 
-  // FINAL RENDER CALL (Corrected for ES Modules)
+  // FINAL RENDER CALL
   ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
