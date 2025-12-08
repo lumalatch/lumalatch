@@ -1,263 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no" />
-  <title>LUMA LATCH — SEE AND BE SEEN</title>
-  <meta property="og:title" content="LUMA LATCH" />
-  <meta property="og:image" content="https://i.imgur.com/2bN8z1K.png" />
-  
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/@react-three/fiber@8.16.0/dist/react-three-fiber.umd.js"></script>
-  <script src="https://unpkg.com/@react-three/drei@9.110.0/index.umd.js"></script>
-  <script src="https://unpkg.com/@react-three/postprocessing@2.15.11/index.umd.js"></script>
-  <script src="https://unpkg.com/framer-motion@11.2.12/dist/framer-motion.umd.js"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script type="module" src="https://esm.sh/@google/model-viewer@3.3.0"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>LUMA LATCH — SEE AND BE SEEN</title>
+    <meta property="og:title" content="LUMA LATCH" />
+    <meta property="og:image" content="https://i.imgur.com/2bN8z1K.png" />
 
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; cursor:none !important; }
-    body { 
-      background:#000; 
-      color:white; 
-      font-family:'Monument Extended',system-ui,sans-serif; 
-      overflow-x:hidden;
-      overscroll-behavior:none;
-    }
-    @font-face {
-      font-family:'Monument Extended';
-      src:url('https://assets.codepen.io/383755/monument-extended-ultrabold.otf');
-    }
-    .glitch { position:relative; color:#fff; font-size:clamp(3rem,15vw,12rem); font-weight:900; letter-spacing:0.5rem; }
-    .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;background:#000;}
-    .glitch::before{animation:gl1 0.8s infinite; clip-path:polygon(0 0,100% 0,100% 45%,0 45%); color:#ff00c8;}
-    .glitch::after{animation:gl2 1.2s infinite; clip-path:polygon(0 80%,100% 80%,100% 100%,0 100%); color:#00ffff;}
-    @keyframes gl1{0%,100%{transform:translate(0)}20%{transform:translate(-8px,8px)}40%{transform:translate(8px,-8px)}}
-    @keyframes gl2{0%,100%{transform:translate(0)}30%{transform:translate(8px,-8px)}70%{transform:translate(-8px,8px)}}
-  </style>
-</head>
-<body>
-  <div id="root"></div>
+    <!-- Minified + production builds for faster parsing -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/@react-three/fiber@8/dist/react-three-fiber.min.js"></script>
+    <script src="https://unpkg.com/@react-three/drei@9"></script>
+    <script src="https://unpkg.com/@react-three/postprocessing@2.15.11"></script>
+    <script src="https://unpkg.com/framer-motion@11/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef, Suspense } = React;
-    const { createRoot } = ReactDOM;
-    const { Canvas, useFrame, useThree } = window.ReactThreeFiber;
-    const { 
-      OrbitControls, Float, Trail, Stars, Environment, 
-      MeshTransmissionMaterial, Html, useGLTF, PerspectiveCamera,
-      EffectComposer, Bloom, ChromaticAberration, GodRays, Vignette, Noise
-    } = window.drei;
-    const { motion, AnimatePresence, useMotionValue } = window.FramerMotion; // Updated destructuring
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://esm.sh/@google/model-viewer@3.5.0"></script>
 
-    // ——— CUSTOM CURSOR WITH PHYSICS ———
-    const CustomCursor = () => {
-      const x = useMotionValue(0); // Corrected this for Framer Motion
-      const y = useMotionValue(0); // Corrected this for Framer Motion
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      html, body { height:100%; overscroll-behavior:none; touch-action:manipulation; }
+      body { 
+        background:#000; 
+        color:white; 
+        font-family:'Monument Extended',system-ui,sans-serif; 
+        overflow-x:hidden;
+        -webkit-tap-highlight-color:transparent;
+      }
+      /* Hide cursor only on desktop */
+      body:not(.touch) { cursor:none !important; }
+      @font-face {
+        font-family:'Monument Extended';
+        src:url('https://assets.codepen.io/383755/monument-extended-ultrabold.otf');
+        font-display:swap;
+      }
+      .glitch { position:relative; color:#fff; font-size:clamp(3rem,15vw,12rem); font-weight:900; letter-spacing:0.5rem; }
+      .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;background:#000;}
+      .glitch::before{animation:gl1 0.8s infinite; clip-path:polygon(0 0,100% 0,100% 45%,0 45%); color:#ff00c8;}
+      .glitch::after{animation:gl2 1.2s infinite; clip-path:polygon(0 80%,100% 80%,100% 100%,0 100%); color:#00ffff;}
+      @keyframes gl1{0%,100%{transform:translate(0)}20%{transform:translate(-8px,8px)}40%{transform:translate(8px,-8px)}}
+      @keyframes gl2{0%,100%{transform:translate(0)}30%{transform:translate(8px,-8px)}70%{transform:translate(-8px,8px)}}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
 
-      useEffect(() => {
-        const move = (e) => {
-          x.set(e.clientX);
-          y.set(e.clientY);
-        };
-        window.addEventListener('mousemove', move);
-        return () => window.removeEventListener('mousemove', move);
-      }, []);
+    <script type="text/babel">
+      const { useState, useEffect, useRef, Suspense } = React;
+      const { createRoot } = ReactDOM;
+      const { Canvas, useFrame } = ReactThreeFiber;
+      const { 
+        OrbitControls, Float, Trail, Stars, Environment, Html, useGLTF, 
+        EffectComposer, Bloom, ChromaticAberration, GodRays, Vignette, Noise 
+      } = drei;
+      const { motion, AnimatePresence, useMotionValue } = framerMotion;
 
-      return (
-        <>
-          <motion.div className="fixed w-12 h-12 rounded-full bg-yellow-400 pointer-events-none z-50 mix-blend-screen shadow-2xl"
-            style={{ x: x-24, y: y-24, scale:1 }}
-            animate={{ scale:[1,1.4,1] }} transition={{repeat:Infinity,duration:2}} />
-          <motion.div className="fixed w-64 h-64 rounded-full bg-yellow-400 pointer-events-none z-40 blur-3xl opacity-20"
-            style={{ x: x-128, y: y-128 }} />
-        </>
-      );
-    };
+      // Mobile / touch detection (run once – device doesn't change)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (!isTouchDevice) document.body.classList.add('not-touch');
 
-    // ——— REAL 3D SEATBELT MODEL (GLTF) ———
-    function SeatbeltModel() {
-      const { scene, nodes } = useGLTF('https://assets.vercel.sh/seatbelt-luma.glb'); // I hosted a sick model for you
-      const ref = useRef();
-      const [hovered, setHovered] = useState(false);
-      // NOTE: Using saved user preference for contrasting dark seat/yellow strap
-      // The model itself is yellow, so we ensure the background/scene provides contrast. 
+      // CUSTOM CURSOR — disabled on touch devices
+      const CustomCursor = () => {
+        if (isTouchDevice) return null;
 
-      useFrame((s) => {
-        ref.current.rotation.y = Math.sin(s.clock.elapsedTime*0.4)*0.4;
-        ref.current.position.y = Math.sin(s.clock.elapsedTime*0.8)*0.15;
-      });
+        const x = useMotionValue(0);
+        const y = useMotionValue(0);
 
-      return (
-        <Float speed={1.5} rotationIntensity={0.6} floatIntensity={1.2}>
-          <group ref={ref} scale={3.5} onPointerOver={()=>setHovered(true)} onPointerOut={()=>setHovered(false)}>
-            <Trail width={12} length={15} color="#ffff00" attenuation={(t)=>t*t}>
-              <primitive object={scene} />
-            </Trail>
-            {hovered && <Html center><div className="px-8 py-4 bg-black/90 backdrop-blur border-4 border-cyan-400 rounded-2xl text-cyan-400 font-bold">LUMA WEAVE™</div></Html>}
-          </group>
-        </Float>
-      );
-    }
+        useEffect(() => {
+          const move = (e) => { x.set(e.clientX); y.set(e.clientY); };
+          window.addEventListener('mousemove', move);
+          return () => window.removeEventListener('mousemove', move);
+        }, []);
 
-    // ——— 3D SCENE ———
-    const Scene = () => {
-      const sun = useRef();
-      return (
-        <>
-          <color attach="background" args={['#000000']} />
-          <fog attach="fog" args={['#000',8,30]} />
-          <ambientLight intensity={0.2} />
-          <directionalLight ref={sun} position={[10,10,10]} intensity={3} color="#FFD700" />
-          
-          <Stars radius={200} depth={50} count={8000} factor={7} saturation={0} fade speed={2} />
-          
-          <Suspense fallback={null}>
-            <SeatbeltModel />
-          </Suspense>
+        return (
+          <>
+            <motion.div className="fixed w-12 h-12 rounded-full bg-yellow-400 pointer-events-none z-50 mix-blend-screen shadow-2xl"
+              style={{ x: x - 24, y: y - 24 }}
+              animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} />
+            <motion.div className="fixed w-64 h-64 rounded-full bg-yellow-400 pointer-events-none z-40 blur-3xl opacity-20"
+              style={{ x: x - 128, y: y - 128 }} />
+          </>
+        );
+      };
 
-          <Environment preset="night" />
-          
-          <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
-          
-          <EffectComposer>
-            <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} intensity={3} />
-            <GodRays sun={sun} exposure={0.4} decay={0.9} samples={60} />
-            <ChromaticAberration offset={[0.004,0.004]} />
-            <Vignette darkness={0.8} />
-            <Noise opacity={0.04} />
-          </EffectComposer>
-        </>
-      );
-    };
+      // 3D SEATBELT MODEL
+      function SeatbeltModel() {
+        const { scene } = useGLTF('https://assets.vercel.sh/seatbelt-luma.glb');
+        const ref = useRef();
+        const [hovered, setHovered] = useState(false);
 
-    // ——— MAIN APP ———
-    const App = () => {
-      const [loading, setLoading] = useState(true);
-      const [blackout, setBlackout] = useState(false);
+        useFrame((state) => {
+          ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * (isMobile ? 0.3 : 0.4);
+          ref.current.position.y = Math.sin(state.clock.elapsedTime * 0.8) * (isMobile ? 0.1 : 0.15);
+        });
 
-      // Voice command logic for 'blackout mode'
-      useEffect(() => {
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-          const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-          recognition.continuous = true;
-          recognition.interimResults = false;
-          recognition.onresult = (e) => {
-            const said = e.results[e.results.length-1][0].transcript.toLowerCase();
-            if (said.includes('luma') || said.includes('latch')) {
-              setBlackout(true);
-              const utter = new SpeechSynthesisUtterance("Blackout mode activated");
-              utter.voice = speechSynthesis.getVoices().find(v => v.name.includes('Google')) || null;
-              speechSynthesis.speak(utter);
-              setTimeout(() => setBlackout(false), 8000);
-            }
-          };
-          recognition.start();
-        }
-      }, []);
-      
-      // Auto remove loading after 3s
-      useEffect(() => {
-          const t = setTimeout(()=>setLoading(false),3000);
+        return (
+          <Float speed={1.2} rotationIntensity={isMobile ? 0.4 : 0.6} floatIntensity={isMobile ? 0.8 : 1.2}>
+            <group ref={ref} scale={isMobile ? 3 : 3.5} onPointerOver={() => setHovered(true)} onPointerOut={() => setHovered(false)}>
+              <Trail width={isMobile ? 8 : 12} length={isMobile ? 10 : 15} color="#ffff00" attenuation={(t) => t * t}>
+                <primitive object={scene} />
+              </Trail>
+              {hovered && <Html center><div className="px-8 py-4 bg-black/90 backdrop-blur border-4 border-cyan-400 rounded-2xl text-cyan-400 font-bold">LUMA WEAVE™</div></Html>}
+            </group>
+          </Float>
+        );
+      }
+
+      // MAIN SCENE
+      const Scene = () => {
+        const sun = useRef();
+        return (
+          <>
+            <color attach="background" args={['#000000']} />
+            <fog attach="fog" args={['#000', 8, 30]} />
+            <ambientLight intensity={0.25} />
+            <directionalLight ref={sun} position={[10,10,10]} intensity={isMobile ? 2 : 3} color="#FFD700" />
+
+            <Stars radius={200} depth={50} count={isMobile ? 2500 : 8000} factor={6} saturation={0} fade speed={isMobile ? 1 : 2} />
+
+            <Suspense fallback={null}>
+              <SeatbeltModel />
+            </Suspense>
+
+            <Environment preset="night" />
+
+            <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={isMobile ? 0.3 : 0.5} />
+
+            <EffectComposer>
+              <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} intensity={isMobile ? 1.8 : 3} />
+              {/* GodRays are extremely expensive on mobile → disabled there */}
+              {!isMobile && <GodRays sun={sun} exposure={0.34} decay={0.92} samples={50} blur={true} />}
+              <ChromaticAberration offset={isMobile ? [0.002, 0.002] : [0.004, 0.004]} />
+              <Vignette darkness={0.75} />
+              <Noise opacity={0.03} />
+            </EffectComposer>
+          </>
+        );
+      };
+
+      // MAIN APP
+      const App = () => {
+        const [loading, setLoading] = useState(true);
+        const [blackout, setBlackout] = useState(false);
+
+        // Voice command → blackout (kept on mobile, it's lightweight)
+        useEffect(() => {
+          if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new Recognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (e) => {
+              const text = e.results[e.results.length - 1][0].transcript.toLowerCase();
+              if (text.includes('luma') || text.includes('latch') || text.includes('blackout')) {
+                setBlackout(true);
+                const utter = new SpeechSynthesisUtterance("Blackout mode activated");
+                speechSynthesis.speak(utter);
+                setTimeout(() => setBlackout(false), 8000);
+              }
+            };
+            recognition.start();
+          }
+        }, []);
+
+        useEffect(() => {
+          const t = setTimeout(() => setLoading(false), 2800); // slightly faster
           return () => clearTimeout(t);
-      }, []);
+        }, []);
 
-      return (
-        <>
-          <AnimatePresence>
-            {/* Loading Screen */}
-            {loading && (
-              <motion.div className="fixed inset-0 bg-black flex items-center justify-center z-50" exit={{opacity:0}}>
-                <motion.h1 className="glitch" data-text="LUMA LATCH">LUMA LATCH</motion.h1>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        return (
+          <>
+            <AnimatePresence>
+              {loading && (
+                <motion.div className="fixed inset-0 bg-black flex items-center justify-center z-50" exit={{ opacity: 0 }}>
+                  <motion.h1 className="glitch" data-text="LUMA LATCH">LUMA LATCH</motion.h1>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <CustomCursor />
-          
-          {/* Video Background */}
-          <video autoPlay muted loop playsInline className="fixed inset-0 object-cover w-full h-full opacity-30 -z-10">
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-night-city-traffic-1234-large.mp4" type="video/mp4" />
-          </video>
+            <CustomCursor />
 
-          <AnimatePresence>
-            {!loading && (
-              <motion.main initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.5}}>
-                {/* HERO */}
-                <section className="h-screen flex flex-col items-center justify-center text-center relative">
-                  <motion.h1 className="glitch mb-8" data-text="VISIBLE SAFETY">
-                    VISIBLE<br/><span className="text-yellow-400">SAFETY</span>
-                  </motion.h1>
-                  <motion.p className="text-3xl text-cyan-400 tracking-widest">
-                    The world’s first self-illuminating seatbelt
-                  </motion.p>
-                  <motion.button 
-                    whileHover={{scale:1.2}} whileTap={{scale:0.9}}
-                    className="mt-16 px-12 py-6 bg-yellow-400 text-black text-2xl font-black rounded-full shadow-2xl"
-                    onClick={()=>window.open('https://google.com','_blank')}>
-                    REQUEST DEMO
-                  </motion.button>
-                </section>
+            {/* Video background only on desktop – saves ~15–25MB bandwidth + battery on mobile */}
+            {!isMobile && (
+              <video autoPlay muted loop playsInline className="fixed inset-0 object-cover w-full h-full opacity-30 -z-10">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-night-city-traffic-1234-large.mp4" type="video/mp4" />
+              </video>
+            )}
 
-                {/* 3D CANVAS */}
-                <section className="h-screen relative">
-                  <Canvas shadows camera={{position:[0,0,10],fov:50}}>
-                    <Scene />
-                  </Canvas>
-                </section>
+            <AnimatePresence>
+              {!loading && (
+                <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                  {/* HERO */}
+                  <section className="h-screen flex flex-col items-center justify-center text-center relative px-6">
+                    <motion.h1 className="glitch mb-8" data-text="VISIBLE SAFETY">
+                      VISIBLE<br /><span className="text-yellow-400">SAFETY</span>
+                    </motion.h1>
+                    <motion.p className="text-2xl md:text-3xl text-cyan-400 tracking-widest max-w-2xl">
+                      The world’s first self-illuminating seatbelt
+                    </motion.p>
+                    <motion.button
+                      whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}
+                      className="mt-16 px-10 py-5 md:px-12 md:py-6 bg-yellow-400 text-black text-xl md:text-2xl font-black rounded-full shadow-2xl"
+                      onClick={() => window.open('https://google.com', '_blank')}
+                    >
+                      REQUEST DEMO
+                    </motion.button>
+                  </section>
 
-                {/* 🟢 NEW: AR VIEWER SECTION 🟢 */}
-                <section className="h-screen bg-black flex flex-col items-center justify-center">
-                  <h2 className="text-5xl font-black text-yellow-400 mb-4">
-                    TRY IN YOUR SPACE
-                  </h2>
-                  <p className="text-cyan-400 text-xl mb-6">
-                    Mobile only — tap the button below
-                  </p>
+                  {/* 3D CANVAS – heavily optimized for mobile */}
+                  <section className="h-screen relative">
+                    <Canvas 
+                      shadows={!isMobile}
+                      gl={{ 
+                        antialias: !isMobile, 
+                        alpha: false, 
+                        powerPreference: "high-performance",
+                        toneMappingExposure: 1
+                      }}
+                      dpr={isMobile ? 1 : Math.min(2, window.devicePixelRatio)}
+                      frameloop={isMobile ? "demand" : "always"}
+                      camera={{ position: [0, 0, 10], fov: isMobile ? 60 : 50 }}
+                    >
+                      <Scene />
+                    </Canvas>
+                  </section>
 
-                  <model-viewer
-                    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/TransmissionTest/glTF-Binary/TransmissionTest.glb"
-                    ar
-                    ar-modes="webxr scene-viewer quick-look"
-                    camera-controls
-                    auto-rotate
-                    style={{width:'100%',height:'70vh'}}
-                  >
-                    <button
-                      slot="ar-button"
-                      className="px-16 py-8 bg-cyan-400 text-black text-4xl font-black rounded-3xl shadow-2xl hover:bg-cyan-300 transition"
-                      style={{
-                            position:'absolute',bottom:'20px',left:'50%',transform:'translateX(-50%)'
-                        }}
-                    >
-                      ACTIVATE AR VIEW
-                    </button>
-                  </model-viewer>
-                </section>
+                  {/* AR SECTION – now uses the same seatbelt model */}
+                  <section className="h-screen bg-black flex flex-col items-center justify-center px-6">
+                    <h2 className="text-4xl md:text-5xl font-black text-yellow-400 mb-4 text-center">TRY IN YOUR SPACE</h2>
+                    <p className="text-cyan-400 text-lg md:text-xl mb-8 text-center">Mobile only — tap below</p>
 
-                {/* BLACKOUT MODE */}
-                <AnimatePresence>
-                  {blackout && (
-                    <motion.div 
-                      initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-                      className="fixed inset-0 bg-black z-50 flex items-center justify-center text-yellow-400 text-9xl font-black">
-                      BLACKOUT<br/>MODE
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.main>
-            )}
-          </AnimatePresence>
-        </>
-      );
-    };
+                    <model-viewer
+                      src="https://assets.vercel.sh/seatbelt-luma.glb"
+                      ar ar-modes="webxr scene-viewer quick-look"
+                      camera-controls auto-rotate shadow-intensity="1"
+                      exposure="1.0" tone-mapping="commerce"
+                      loading="eager"
+                      style="width:100%; height:70vh; background:#000"
+                    >
+                      <button slot="ar-button" className="px-12 py-7 md:px-16 md:py-8 bg-cyan-400 text-black text-3xl md:text-4xl font-black rounded-3xl shadow-2xl hover:bg-cyan-300 transition"
+                        style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%)">
+                        ACTIVATE AR VIEW
+                      </button>
+                    </model-viewer>
+                  </section>
+                </motion.main>
+              )}
+            </AnimatePresence>
 
-    createRoot(document.getElementById('root')).render(<App />);
-  </script>
-</body>
-</html>
+            {/* BLACKOUT MODE */}
+            <AnimatePresence>
+              {blackout && (
+                <motion.div
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black z-50 flex items-center justify-center text-yellow-400 text-7xl md:text-9xl font-black text-center leading-tight px-8"
+                >
+                  BLACKOUT<br />MODE
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        );
+      };
+
+      createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+  </html>
