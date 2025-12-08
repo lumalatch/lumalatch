@@ -9,14 +9,15 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <script type="module" src="https://esm.sh/@google/model-viewer@3.3.0"></script>
-
   <style>
     body,html { margin:0; padding:0; overflow-x:hidden; background:black; }
   </style>
 </head>
 <body>
 <div id="root"></div>
+
+<script type="module" src="https://esm.sh/@google/model-viewer@3.3.0"></script> 
+
 
 <script type="module">
   // 1. IMPORT ALL LIBRARIES USING THEIR ALIASES
@@ -47,7 +48,6 @@
     const y = useMotionValue(0);
 
     useEffect(() => {
-      // 🟢 THIS LINE IS NOW CORRECTED: x.set(e.clientX); y.set(e.clientY);
       const move = e => { x.set(e.clientX); y.set(e.clientY); }; 
       window.addEventListener("mousemove", move);
       return () => window.removeEventListener("mousemove", move);
