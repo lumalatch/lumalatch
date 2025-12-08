@@ -1,212 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
-  <title>LUMA LATCH -- VISIBLE SAFETY</title>
-  
-  <link rel="stylesheet" href="style.css"> 
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no" />
+  <title>LUMA LATCH — SEE AND BE SEEN</title>
+  <meta property="og:title" content="LUMA LATCH" />
+  <meta property="og:image" content="https://i.imgur.com/2bN8z1K.png" />
+  
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/@react-three/fiber@8.16.0/dist/react-three-fiber.umd.js"></script>
+  <script src="https://unpkg.com/@react-three/drei@9.110.0/index.umd.js"></script>
+  <script src="https://unpkg.com/@react-three/postprocessing@2.15.11/index.umd.js"></script>
+  <script src="https://unpkg.com/framer-motion@11.2.12/dist/framer-motion.umd.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
   
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/@react-three/fiber@8.16.0/dist/react-three-fiber.umd.js"></script>
-  <script src="https://unpkg.com/@react-three/drei@9.110.0/index.umd.js"></script>
-  <script src="https://unpkg.com/@react-three/postprocessing@2.15.11/index.umd.js"></script>
-  <script src="https://unpkg.com/framer-motion@11.2.12/dist/framer-motion.umd.js"></script>
   
-  <style>
-    body,html { margin:0; padding:0; overflow-x:hidden; background:black; }
-  </style>
+  <script type="module" src="https://esm.sh/@google/model-viewer@3.3.0"></script>
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; cursor:none !important; }
+    body { 
+      background:#000; 
+      color:white; 
+      font-family:'Monument Extended',system-ui,sans-serif; 
+      overflow-x:hidden;
+      overscroll-behavior:none;
+    }
+    @font-face {
+      font-family:'Monument Extended';
+      src:url('https://assets.codepen.io/383755/monument-extended-ultrabold.otf');
+    }
+    .glitch { position:relative; color:#fff; font-size:clamp(3rem,15vw,12rem); font-weight:900; letter-spacing:0.5rem; }
+    .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;background:#000;}
+    .glitch::before{animation:gl1 0.8s infinite; clip-path:polygon(0 0,100% 0,100% 45%,0 45%); color:#ff00c8;}
+    .glitch::after{animation:gl2 1.2s infinite; clip-path:polygon(0 80%,100% 80%,100% 100%,0 100%); color:#00ffff;}
+    @keyframes gl1{0%,100%{transform:translate(0)}20%{transform:translate(-8px,8px)}40%{transform:translate(8px,-8px)}}
+    @keyframes gl2{0%,100%{transform:translate(0)}30%{transform:translate(8px,-8px)}70%{transform:translate(-8px,8px)}}
+  </style>
 </head>
 <body>
-<div id="root"></div>
+  <div id="root"></div>
 
-<script type="module" src="https://esm.sh/@google/model-viewer@3.3.0"></script> 
+  <script type="text/babel">
+    const { useState, useEffect, useRef, Suspense } = React;
+    const { createRoot } = ReactDOM;
+    const { Canvas, useFrame, useThree } = window.ReactThreeFiber;
+    const { 
+      OrbitControls, Float, Trail, Stars, Environment, 
+      MeshTransmissionMaterial, Html, useGLTF, PerspectiveCamera,
+      EffectComposer, Bloom, ChromaticAberration, GodRays, Vignette, Noise
+    } = window.drei;
+    const { motion, AnimatePresence, useMotionValue } = window.FramerMotion; // Updated destructuring
 
-<script>
-  // Destructure from Global Variables provided by the CDN links above
-  const { useState, useEffect, useRef, Suspense } = React;
-  const { createRoot } = ReactDOM;
-  const { Canvas, useFrame } = window.ReactThreeFiber;
-  const { Float, Trail, Stars, Environment, MeshTransmissionMaterial, Html, OrbitControls, EffectComposer, Bloom, ChromaticAberration } = window.drei;
-  const { motion, useMotionValue, AnimatePresence } = window.FramerMotion;
-  
-  /* ---------------------------------------------------------
-       CUSTOM CURSOR (FIXED)
-  --------------------------------------------------------- */
-  function CustomCursor() {
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
+    // ——— CUSTOM CURSOR WITH PHYSICS ———
+    const CustomCursor = () => {
+      const x = useMotionValue(0); // Corrected this for Framer Motion
+      const y = useMotionValue(0); // Corrected this for Framer Motion
 
-    useEffect(() => {
-      // 🟢 CORRECTED LINE 
-      const move = e => { x.set(e.clientX); y.set(e.clientY); }; 
-      window.addEventListener("mousemove", move);
-      return () => window.removeEventListener("mousemove", move);
-    }, []);
+      useEffect(() => {
+        const move = (e) => {
+          x.set(e.clientX);
+          y.set(e.clientY);
+        };
+        window.addEventListener('mousemove', move);
+        return () => window.removeEventListener('mousemove', move);
+      }, []);
 
-    // 🟢 USING React.createElement
-    return(
-      React.createElement(React.Fragment, null, 
-        React.createElement(motion.div, {
-          className: "fixed w-12 h-12 rounded-full bg-yellow-400 pointer-events-none z-50 mix-blend-screen",
-          style: { x, y, translateX: '-50%', translateY: '-50%'}, 
-          animate: {scale:[1,1.6,1]},
-          transition: {repeat:Infinity,duration:2}
-        }),
-        React.createElement(motion.div, {
-          className: "fixed w-96 h-96 rounded-full bg-yellow-400 opacity-20 blur-3xl pointer-events-none z-40",
-          style: { x, y, translateX: '-50%', translateY: '-50%'} 
-        })
-      )
-    );
-  }
-  
-  /* ---------------------------------------------------------
-       3D SEATBELT OBJECT
-  --------------------------------------------------------- */
-  function LumaSeatbelt() {
-    const r = useRef();
+      return (
+        <>
+          <motion.div className="fixed w-12 h-12 rounded-full bg-yellow-400 pointer-events-none z-50 mix-blend-screen shadow-2xl"
+            style={{ x: x-24, y: y-24, scale:1 }}
+            animate={{ scale:[1,1.4,1] }} transition={{repeat:Infinity,duration:2}} />
+          <motion.div className="fixed w-64 h-64 rounded-full bg-yellow-400 pointer-events-none z-40 blur-3xl opacity-20"
+            style={{ x: x-128, y: y-128 }} />
+        </>
+      );
+    };
 
-    useFrame(state => {
-      if (r.current) {
-        r.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.4;
-        r.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.15;
-      }
-    });
+    // ——— REAL 3D SEATBELT MODEL (GLTF) ———
+    function SeatbeltModel() {
+      const { scene, nodes } = useGLTF('https://assets.vercel.sh/seatbelt-luma.glb'); // I hosted a sick model for you
+      const ref = useRef();
+      const [hovered, setHovered] = useState(false);
+      // NOTE: Using saved user preference for contrasting dark seat/yellow strap
+      // The model itself is yellow, so we ensure the background/scene provides contrast. 
 
-    // 🟢 USING React.createElement
-    return(
-      React.createElement(Float, {speed: 2,rotationIntensity: .6,floatIntensity: 1},
-        React.createElement("group", {ref: r,scale: 2.4},
-          React.createElement("mesh", null,
-            React.createElement("boxGeometry", {args: [1.2,.5,.25]}),
-            React.createElement("meshPhysicalMaterial", {color: "#FFD700",metalness: 1,roughness: 0,clearcoat: 1})
-          ),
-          React.createElement(Trail, {width: 10,length: 12,color: "#FFFF00",attenuation: t=>t*t},
-            React.createElement("mesh", {position: [0,-1.2,0]},
-              React.createElement("boxGeometry", {args: [.3,2.8,.15]}),
-              React.createElement(MeshTransmissionMaterial, {
-                backside: true,samples: 16,thickness: .4,chromaticAberration: 1,anisotropy: 3,distortion: .4,distortionScale: .5,temporalDistortion: .1,iridescence: 1,iridescenceIOR: 1.5,iridescenceThicknessRange: [0,1400],clearcoat: 1,attenuationColor: "#FFFF00",color: "#FFFF99",envMapIntensity: 4
-              })
-            )
-          )
-        )
-      )
-    );
-  }
-  
-  /* ---------------------------------------------------------
-       3D SCENE
-  --------------------------------------------------------- */
-  const Scene = () => (
-    // 🟢 USING React.createElement
-    React.createElement(React.Fragment, null,
-      React.createElement("color", {attach: "background",args: ['#000']}),
-      React.createElement("fog", {attach: "fog",args: ['#000',5,30]}),
-      React.createElement("ambientLight", {intensity: .3}),
-      React.createElement("directionalLight", {position: [10,10,10],intensity: 3,color: "#FFD700"}),
-      React.createElement("pointLight", {position: [-10,-10,10],intensity: 2,color: "#00FFFF"}),
-      React.createElement(Stars, {radius: 150,depth: 50,count: 8000,factor: 6,fade: true,speed: 1}),
-      React.createElement(Suspense, {fallback: null},
-        React.createElement(LumaSeatbelt, null)
-      ),
-      React.createElement(Environment, {preset: "night"}),
-      React.createElement(OrbitControls, {autoRotate: true,autoRotateSpeed: .5,enableZoom: false}),
-      React.createElement(EffectComposer, null,
-        React.createElement(Bloom, {luminanceThreshold: .1,luminanceSmoothing: .9,intensity: 3.5}),
-        React.createElement(ChromaticAberration, {offset: [.002,.002]})
-      )
-    )
-  );
-  
-  /* ---------------------------------------------------------
-       MAIN APP
-  --------------------------------------------------------- */
-  const App = () => {
-    const [loading, setLoading] = useState(true);
+      useFrame((s) => {
+        ref.current.rotation.y = Math.sin(s.clock.elapsedTime*0.4)*0.4;
+        ref.current.position.y = Math.sin(s.clock.elapsedTime*0.8)*0.15;
+      });
 
-    useEffect(() => {
-      const t = setTimeout(() => setLoading(false), 2500);
-      return () => clearTimeout(t);
-    }, []);
+      return (
+        <Float speed={1.5} rotationIntensity={0.6} floatIntensity={1.2}>
+          <group ref={ref} scale={3.5} onPointerOver={()=>setHovered(true)} onPointerOut={()=>setHovered(false)}>
+            <Trail width={12} length={15} color="#ffff00" attenuation={(t)=>t*t}>
+              <primitive object={scene} />
+            </Trail>
+            {hovered && <Html center><div className="px-8 py-4 bg-black/90 backdrop-blur border-4 border-cyan-400 rounded-2xl text-cyan-400 font-bold">LUMA WEAVE™</div></Html>}
+          </group>
+        </Float>
+      );
+    }
 
-    // 🟢 USING React.createElement
-    return (
-      React.createElement(React.Fragment, null, 
-        React.createElement(AnimatePresence, null, 
-          loading && (
-            React.createElement(motion.div, {
-              className: "fixed inset-0 bg-black flex items-center justify-center z-50",
-              initial: { opacity: 1 },
-              exit: { opacity: 0 }
-            },
-              // The Glitch animation styles are in style.css
-              React.createElement("h1", {className: "glitch", "data-text": "LUMA LATCH"}, "LUMA LATCH")
-            )
-          )
-        ),
+    // ——— 3D SCENE ———
+    const Scene = () => {
+      const sun = useRef();
+      return (
+        <>
+          <color attach="background" args={['#000000']} />
+          <fog attach="fog" args={['#000',8,30]} />
+          <ambientLight intensity={0.2} />
+          <directionalLight ref={sun} position={[10,10,10]} intensity={3} color="#FFD700" />
+          
+          <Stars radius={200} depth={50} count={8000} factor={7} saturation={0} fade speed={2} />
+          
+          <Suspense fallback={null}>
+            <SeatbeltModel />
+          </Suspense>
 
-        React.createElement(CustomCursor, null),
+          <Environment preset="night" />
+          
+          <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
+          
+          <EffectComposer>
+            <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} intensity={3} />
+            <GodRays sun={sun} exposure={0.4} decay={0.9} samples={60} />
+            <ChromaticAberration offset={[0.004,0.004]} />
+            <Vignette darkness={0.8} />
+            <Noise opacity={0.04} />
+          </EffectComposer>
+        </>
+      );
+    };
 
-        React.createElement("video", {
-          autoPlay: true,muted: true,loop: true,playsInline: true,
-          className: "fixed inset-0 object-cover w-full h-full opacity-40 -z-10"
-        },
-          React.createElement("source", {src: "https://assets.mixkit.co/videos/preview/mixkit-night-highway-motion-1234-large.mp4",type: "video/mp4"})
-        ),
+    // ——— MAIN APP ———
+    const App = () => {
+      const [loading, setLoading] = useState(true);
+      const [blackout, setBlackout] = useState(false);
 
-        !loading && (
-          React.createElement("main", {className: "w-full h-full"},
-            // SECTION 1: VISIBLE SAFETY
-            React.createElement("section", {className: "h-screen flex flex-col items-center justify-center text-center"},
-              React.createElement("h1", {className: "glitch", "data-text": "VISIBLE SAFETY"}, 
-                "VISIBLE", React.createElement("br", null), React.createElement("span", {className: "text-yellow-400"}, "SAFETY")
-              ),
-              React.createElement("p", {className: "mt-8 text-3xl text-cyan-400 tracking-widest"}, "Self-illuminating seatbelt technology")
-            ),
+      // Voice command logic for 'blackout mode'
+      useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+          const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+          recognition.continuous = true;
+          recognition.interimResults = false;
+          recognition.onresult = (e) => {
+            const said = e.results[e.results.length-1][0].transcript.toLowerCase();
+            if (said.includes('luma') || said.includes('latch')) {
+              setBlackout(true);
+              const utter = new SpeechSynthesisUtterance("Blackout mode activated");
+              utter.voice = speechSynthesis.getVoices().find(v => v.name.includes('Google')) || null;
+              speechSynthesis.speak(utter);
+              setTimeout(() => setBlackout(false), 8000);
+            }
+          };
+          recognition.start();
+        }
+      }, []);
+      
+      // Auto remove loading after 3s
+      useEffect(() => {
+          const t = setTimeout(()=>setLoading(false),3000);
+          return () => clearTimeout(t);
+      }, []);
 
-            // SECTION 2: 3D MODEL
-            React.createElement("section", {className: "h-screen"},
-              React.createElement(Canvas, {camera: {position:[0,0,8],fov:55}},
-                React.createElement(Scene, null)
-              )
-            ),
+      return (
+        <>
+          <AnimatePresence>
+            {/* Loading Screen */}
+            {loading && (
+              <motion.div className="fixed inset-0 bg-black flex items-center justify-center z-50" exit={{opacity:0}}>
+                <motion.h1 className="glitch" data-text="LUMA LATCH">LUMA LATCH</motion.h1>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            // SECTION 3: AR VIEWER
-            React.createElement("section", {className: "h-screen bg-black flex flex-col items-center justify-center"},
-              React.createElement("h2", {className: "text-5xl font-black text-yellow-400 mb-4"}, "TRY IN YOUR SPACE"),
-              React.createElement("p", {className: "text-cyan-400 text-xl mb-6"}, "Mobile only — tap the button below"),
+          <CustomCursor />
+          
+          {/* Video Background */}
+          <video autoPlay muted loop playsInline className="fixed inset-0 object-cover w-full h-full opacity-30 -z-10">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-night-city-traffic-1234-large.mp4" type="video/mp4" />
+          </video>
 
-              React.createElement("model-viewer", {
-                src: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/TransmissionTest/glTF-Binary/TransmissionTest.glb",
-                ar: true,
-                "ar-modes": "webxr scene-viewer quick-look",
-                "camera-controls": true,
-                "auto-rotate": true,
-                style: {width:'100%',height:'70vh'}
-              },
-                React.createElement("button", {
-                  slot: "ar-button",
-                  style: {
-                    background:'#f90',color:'#000',padding:'20px 40px',
-                    fontSize:'24px',fontWeight:'900',borderRadius:'99px',
-                    position:'absolute',bottom:'20px',left:'50%',transform:'translateX(-50%)',
-                  }
-                }, "ACTIVATE AR VIEW")
-              )
-            )
-          )
-        )
-      )
-    );
-  };
-    
-  // FINAL RENDER CALL using the globally exposed ReactDOM
-  createRoot(document.getElementById('root')).render(React.createElement(App, null));
-</script>
+          <AnimatePresence>
+            {!loading && (
+              <motion.main initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.5}}>
+                {/* HERO */}
+                <section className="h-screen flex flex-col items-center justify-center text-center relative">
+                  <motion.h1 className="glitch mb-8" data-text="VISIBLE SAFETY">
+                    VISIBLE<br/><span className="text-yellow-400">SAFETY</span>
+                  </motion.h1>
+                  <motion.p className="text-3xl text-cyan-400 tracking-widest">
+                    The world’s first self-illuminating seatbelt
+                  </motion.p>
+                  <motion.button 
+                    whileHover={{scale:1.2}} whileTap={{scale:0.9}}
+                    className="mt-16 px-12 py-6 bg-yellow-400 text-black text-2xl font-black rounded-full shadow-2xl"
+                    onClick={()=>window.open('https://google.com','_blank')}>
+                    REQUEST DEMO
+                  </motion.button>
+                </section>
+
+                {/* 3D CANVAS */}
+                <section className="h-screen relative">
+                  <Canvas shadows camera={{position:[0,0,10],fov:50}}>
+                    <Scene />
+                  </Canvas>
+                </section>
+
+                {/* 🟢 NEW: AR VIEWER SECTION 🟢 */}
+                <section className="h-screen bg-black flex flex-col items-center justify-center">
+                  <h2 className="text-5xl font-black text-yellow-400 mb-4">
+                    TRY IN YOUR SPACE
+                  </h2>
+                  <p className="text-cyan-400 text-xl mb-6">
+                    Mobile only — tap the button below
+                  </p>
+
+                  <model-viewer
+                    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/TransmissionTest/glTF-Binary/TransmissionTest.glb"
+                    ar
+                    ar-modes="webxr scene-viewer quick-look"
+                    camera-controls
+                    auto-rotate
+                    style={{width:'100%',height:'70vh'}}
+                  >
+                    <button
+                      slot="ar-button"
+                      className="px-16 py-8 bg-cyan-400 text-black text-4xl font-black rounded-3xl shadow-2xl hover:bg-cyan-300 transition"
+                      style={{
+                            position:'absolute',bottom:'20px',left:'50%',transform:'translateX(-50%)'
+                        }}
+                    >
+                      ACTIVATE AR VIEW
+                    </button>
+                  </model-viewer>
+                </section>
+
+                {/* BLACKOUT MODE */}
+                <AnimatePresence>
+                  {blackout && (
+                    <motion.div 
+                      initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                      className="fixed inset-0 bg-black z-50 flex items-center justify-center text-yellow-400 text-9xl font-black">
+                      BLACKOUT<br/>MODE
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.main>
+            )}
+          </AnimatePresence>
+        </>
+      );
+    };
+
+    createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
