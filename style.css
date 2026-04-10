@@ -1,9 +1,42 @@
-*{margin:0;padding:0;box-sizing:border-box;cursor:none!important}
-body{background:#000;color:white;font-family:'Monument Extended',sans-serif;overflow-x:hidden}
-@font-face{font-family:'Monument Extended';src:url('https://assets.codepen.io/383755/monument-extended-ultrabold.otf')}
-.glitch{position:relative;color:#fff;font-size:clamp(4rem,16vw,14rem);font-weight:900;letter-spacing:.5rem;text-transform:uppercase}
-.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;background:#000}
-.glitch::before{animation:g1 .8s infinite;clip-path:polygon(0 0,100% 0,100% 45%,0 45%);color:#ff00c8}
-.glitch::after{animation:g2 1.2s infinite;clip-path:polygon(0 55%,100% 55%,100% 100%,0 100%);color:#00ffff}
-@keyframes g1{0%,100%{transform:translate(0)}20%{transform:translate(-8px,8px)}40%{transform:translate(8px,-8px)}}
-@keyframes g2{0%,100%{transform:translate(0)}30%{transform:translate(8px,-8px)}70%{transform:translate(-8px,8px)}}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { 
+  height: 100%; 
+  overflow-x: hidden; 
+  background: #ffffff; 
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+}
+
+.data-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* GPU-accelerated transforms */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Disable cursor for immersive experience (optional) */
+/* body { cursor: none; } */
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent text selection during interaction */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
