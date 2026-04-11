@@ -2,338 +2,94 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>LUMA LATCH — VISIBLE SAFETY</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Modern import map – makes everything work in a module -->
-  <script type="importmap">
-  {
-    "imports": {
-      "react": "https://esm.sh/react@18.3.1?dev",
-      "react-dom": "https://esm.sh/react-dom@18.3.1?dev",
-      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
-      "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.16.8",
-      "@react-three/drei": "https://esm.sh/@react-three/drei@9.112.0",
-      "@react-three/postprocessing": "https://esm.sh/@react-three/postprocessing@2.16.2",
-      "three": "https://esm.sh/three@0.168.0",
-      "framer-motion": "https://esm.sh/framer-motion@11.3.31"
-    }
-  }
-  </script>
-
-  <script type="module" src="https://esm.sh/@google/model-viewer@3.5.0"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCOTOPIC SIMULATION — FINDABILITY</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { height:100%; overflow-x:hidden; background:#000; font-family:sans-serif; }
-    body.no-touch { cursor:none !important; }
-
-    @font-face {
-      font-family: 'Monument Extended';
-      src: url('https://assets.codepen.io/383755/monument-extended-ultrabold.otf');
-      font-display: swap;
-    }
-
-    .glitch {
-      position: relative;
-      color: #fff;
-      font-size: clamp(3rem, 15vw, 10rem);
-      font-weight: 900;
-      letter-spacing: 0.5rem;
-      font-family: 'Monument Extended', sans-serif;
-    }
-    .glitch::before,
-    .glitch::after {
-      content: attr(data-text);
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #000;
-    }
-    .glitch::before {
-      animation: glitch1 0.8s infinite;
-      clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-      color: #ff00c8;
-    }
-    .glitch::after {
-      animation: glitch2 1.2s infinite;
-      clip-path: polygon(0 80%, 100% 80%, 100% 100%, 0 100%);
-      color: #00ffff;
-    }
-    @keyframes glitch1 {
-      0%,100%{transform:translate(0)}
-      20%{transform:translate(-8px,8px)}
-      40%{transform:translate(8px,-8px)}
-    }
-    @keyframes glitch2 {
-      0%,100%{transform:translate(0)}
-      30%{transform:translate(8px,-8px)}
-      70%{transform:translate(-8px,8px)}
-    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg-void:#050505;--emerald:#49FF9C;--white:#FFFFFF;--black:#000000;--glass-bg:rgba(255,255,255,0.02);--glass-border:rgba(255,255,255,0.20);--mono-font:'SF Mono','Monaco','Inconsolata',monospace;--display-font:'Helvetica Neue','Arial',sans-serif}
+    html{font-size:16px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    body{background:var(--bg-void);color:var(--white);font-family:var(--display-font);overflow-x:hidden;min-height:100vh;cursor:crosshair}
+    .noise-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.05;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")}
+    .hero{position:fixed;top:0;left:0;width:100%;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:transform 0.8s cubic-bezier(0.16,1,0.3,1)}
+    .hero.pinned{transform:translateY(-100vh)}
+    .eyebrow{font-family:var(--mono-font);font-size:0.75rem;letter-spacing:0.2em;color:var(--white);opacity:0.6;margin-bottom:2rem;text-transform:uppercase}
+    .hero-line{font-size:clamp(1.5rem,4vw,3rem);line-height:1.3;text-align:center;font-weight:300;letter-spacing:0.02em;max-width:800px;padding:0 2rem}
+    .hero-line .fade-part{transition:opacity 0.4s ease}
+    .hero-line .fade-part.hidden{opacity:0}
+    .hero-line .focus-part{display:inline-block;transition:filter 0.45s ease,color 0.45s ease}
+    .hero-line .focus-part.blurred{filter:blur(12px);color:var(--black)}
+    .hero-line .focus-part.sharp{filter:blur(0);color:var(--white)}
+    .hero-line .instantly{display:inline-block;opacity:0;margin-left:0.5rem;letter-spacing:0.05em;font-weight:400}
+    .hero-line .instantly.visible{opacity:1;animation:focusIn 0.45s ease forwards}
+    @keyframes focusIn{0%{filter:blur(12px);color:var(--black)}100%{filter:blur(0);color:var(--white)}}
+    .retinal-toggle{position:fixed;bottom:3rem;right:3rem;width:64px;height:64px;border-radius:50%;background:transparent;border:1px solid var(--glass-border);cursor:pointer;z-index:1000;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;backdrop-filter:blur(10px)}
+    .retinal-toggle:hover{background:var(--glass-bg);border-color:var(--emerald)}
+    .retinal-toggle.active{background:var(--emerald);border-color:var(--emerald)}
+    .retinal-toggle svg{width:24px;height:24px;stroke:var(--white);stroke-width:1.5;fill:none}
+    .scene-container{position:fixed;inset:0;perspective:1000px;overflow:hidden}
+    .scene-layer{position:absolute;inset:0;will-change:transform}
+    .layer-bg{background:var(--bg-void);z-index:1}
+    .layer-bg::after{content:'';position:absolute;inset:0;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E")}
+    .layer-factory{z-index:2;display:flex;align-items:center;justify-content:center}
+    .factory-belt{width:120px;height:600px;background:linear-gradient(90deg,#1a1a1a 0%,#0d0d0d 20%,#1a1a1a 40%,#0d0d0d 60%,#1a1a1a 80%,#0d0d0d 100%);position:relative;overflow:hidden}
+    .factory-belt::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(0,0,0,0.3) 2px,rgba(0,0,0,0.3) 4px);opacity:0.5}
+    .layer-luma{z-index:3;display:flex;align-items:center;justify-content:center}
+    .luma-belt{width:120px;height:600px;position:relative;opacity:0;transition:opacity 0.6s ease}
+    .luma-belt.active{opacity:1}
+    .luma-weave{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0px,transparent 8px,rgba(73,255,156,0.8) 8px,rgba(73,255,156,0.8) 10px,transparent 10px,transparent 18px);filter:blur(0.5px)}
+    .luma-gaps{position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0deg,transparent 3deg,rgba(73,255,156,0.4) 3deg,rgba(73,255,156,0.4) 6deg);mix-blend-mode:screen}
+    .decay-mask{position:absolute;inset:0;background:black;opacity:0;transition:opacity 0.3s ease}
+    .luma-belt.decaying .decay-mask{opacity:1}
+    .layer-type{z-index:4;pointer-events:none}
+    .timeline-wrapper{position:fixed;bottom:0;left:0;width:100%;height:100vh;z-index:50}
+    .timeline-track{position:absolute;bottom:6rem;left:50%;transform:translateX(-50%);width:80%;height:1px;background:rgba(255,255,255,0.1)}
+    .tracer-line{position:absolute;bottom:6rem;left:10%;height:1px;background:var(--emerald);width:0;will-change:width}
+    .tracer-pip{position:absolute;bottom:calc(6rem - 3px);left:10%;width:6px;height:6px;background:var(--white);border-radius:50%;will-change:left;box-shadow:0 0 10px var(--emerald)}
+    .markers-container{position:absolute;bottom:8rem;left:10%;right:10%;display:flex;justify-content:space-between}
+    .marker{position:relative;width:140px;padding:1rem 1.25rem;background:var(--glass-bg);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--glass-border);border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.5),0 10px 20px rgba(0,0,0,0.3),0 40px 80px rgba(0,0,0,0.2);transition:transform 0.2s ease,border-color 0.2s ease;cursor:pointer}
+    .marker::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)}
+    .marker:hover{transform:rotateX(2deg);border-color:var(--emerald)}
+    .marker-label{font-family:var(--mono-font);font-size:0.625rem;letter-spacing:0.15em;color:var(--emerald);margin-bottom:0.5rem;text-transform:uppercase}
+    .marker-copy{font-size:0.875rem;font-weight:400;line-height:1.4;color:var(--white);opacity:0.9}
+    .marker-meta{font-family:var(--mono-font);font-size:0.625rem;color:var(--white);opacity:0.4;margin-top:0.5rem}
+    .marker.detent-active{border-color:var(--emerald);box-shadow:0 0 0 1px var(--emerald),0 2px 4px rgba(0,0,0,0.5),0 10px 20px rgba(0,0,0,0.3),0 40px 80px rgba(0,0,0,0.2)}
+    .exposure-flash{position:fixed;inset:0;background:white;opacity:0;pointer-events:none;z-index:999;mix-blend-mode:overlay}
+    .exposure-flash.active{animation:flashPulse 0.6s ease-out}
+    @keyframes flashPulse{0%{opacity:0}10%{opacity:0.15}100%{opacity:0}}
+    .scroll-capture{height:400vh;pointer-events:none}
+    @media(max-width:768px){.markers-container{flex-direction:column;gap:1rem;bottom:10rem;left:50%;transform:translateX(-50%);width:90%}.marker{width:100%}.timeline-track,.tracer-line{width:90%}.retinal-toggle{bottom:2rem;right:2rem;width:56px;height:56px}}
   </style>
 </head>
 <body>
-
-  <div id="root"></div>
-
-  <script type="module">
-    import React, { useState, useEffect, useRef, Suspense } from 'react';
-    import ReactDOM from 'react-dom';
-    import { Canvas, useFrame } from '@react-three/fiber';
-    import { Float, Trail, Stars, Environment, Html, OrbitControls } from '@react-three/drei';
-    import { EffectComposer, Bloom, ChromaticAberration, Vignette, Noise } from '@react-three/postprocessing';
-    import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
-
-    const { createRoot } = ReactDOM;
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (!isTouch) document.body.classList.add('no-touch');
-
-    // Custom glowing cursor (desktop only)
-    const CustomCursor = () => {
-      if (isTouch) return null;
-      const x = useMotionValue(0);
-      const y = useMotionValue(0);
-
-      useEffect(() => {
-        const move = (e) => {
-          x.set(e.clientX);
-          y.set(e.clientY);
-        };
-        window.addEventListener('mousemove', move);
-        return () => window.removeEventListener('mousemove', move);
-      }, [x, y]);
-
-      return (
-        <>
-          <motion.div
-            className="fixed w-12 h-12 rounded-full bg-yellow-400 pointer-events-none z-50 mix-blend-screen shadow-2xl"
-            style={{ x, y, translateX: '-50%', translateY: '-50%' }}
-            animate={{ scale: [1, 1.4, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          />
-          <motion.div
-            className="fixed w-64 h-64 rounded-full bg-yellow-400 pointer-events-none z-40 blur-3xl opacity-20"
-            style={{ x, y, translateX: '-50%', translateY: '-50%' }}
-          />
-        </>
-      );
-    };
-
-    // 3D LUMA Seatbelt
-    function LumaSeatbelt() {
-      const ref = useRef();
-      const [hovered, setHovered] = useState(false);
-
-      useFrame((state) => {
-        if (ref.current) {
-          ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.35;
-          ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.15;
-        }
-      });
-
-      return (
-        <Float speed={1.3} rotationIntensity={0.5} floatIntensity={0.9}>
-          <group
-            ref={ref}
-            scale={isMobile ? 2.5 : 3}
-            onPointerOver={() => setHovered(true)}
-            onPointerOut={() => setHovered(false)}
-          >
-            <mesh>
-              <boxGeometry args={[1.2, 0.5, 0.25]} />
-              <meshPhysicalMaterial color="#FFD700" metalness={1} roughness={0} clearcoat={1} />
-            </mesh>
-
-            <Trail width={isMobile ? 8 : 12} length={12} color="#FFFF00" attenuation={(t) => t * t}>
-              <mesh position={[0, -1.2, 0]}>
-                <boxGeometry args={[0.3, 2.8, 0.15]} />
-                <meshPhysicalMaterial color="#FFFF99" metalness={0.6} roughness={0.2} />
-              </mesh>
-            </Trail>
-
-            {hovered && (
-              <Html center>
-                <div className="px-6 py-3 bg-black/90 backdrop-blur border-4 border-cyan-400 rounded-2xl text-cyan-400 font-bold">
-                  LUMA WEAVE™
-                </div>
-              </Html>
-            )}
-          </group>
-        </Float>
-      );
-    }
-
-    const Scene = () => (
-      <>
-        <color attach="background" args={['#000']} />
-        <fog attach="fog" args={['#000', 8, 30]} />
-        <ambientLight intensity={0.3} />
-        <directionalLight position={[10, 10, 10]} intensity={isMobile ? 2 : 3} color="#FFD700" />
-        <Stars radius={200} depth={50} count={isMobile ? 3000 : 8000} factor={6} fade speed={isMobile ? 1 : 2} />
-        <Suspense fallback={null}>
-          <LumaSeatbelt />
-        </Suspense>
-        <Environment preset="night" />
-        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={isMobile ? 0.3 : 0.5} />
-        <EffectComposer>
-          <Bloom luminanceThreshold={0.1} intensity={isMobile ? 1.8 : 3} />
-          <ChromaticAberration offset={isMobile ? [0.002, 0.002] : [0.004, 0.004]} />
-          <Vignette darkness={0.7} />
-          <Noise opacity={0.03} />
-        </EffectComposer>
-      </>
-    );
-
-    const App = () => {
-      const [loading, setLoading] = useState(true);
-      const [blackout, setBlackout] = useState(false);
-
-      useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 2600);
-        return () => clearTimeout(timer);
-      }, []);
-
-      // Voice command: say "luma", "latch", or "blackout"
-      useEffect(() => {
-        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-          const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-          const recognition = new Recognition();
-          recognition.continuous = true;
-          recognition.interimResults = false;
-          recognition.lang = 'en-US';
-
-          recognition.onresult = (event) => {
-            const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-            if (transcript.includes('luma') || transcript.includes('latch') || transcript.includes('blackout')) {
-              setBlackout(true);
-              const utter = new SpeechSynthesisUtterance("Blackout mode activated");
-              speechSynthesis.speak(utter);
-              setTimeout(() => setBlackout(false), 8000);
-            }
-          };
-
-          recognition.start();
-          return () => recognition.stop();
-        }
-      }, []);
-
-      return (
-        <>
-          <AnimatePresence>
-            {loading && (
-              <motion.div
-                className="fixed inset-0 bg-black flex items-center justify-center z-50"
-                exit={{ opacity: 0 }}
-              >
-                <motion.h1 className="glitch" data-text="LUMA LATCH">
-                  LUMA LATCH
-                </motion.h1>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <CustomCursor />
-
-          {/* Background video (desktop only) */}
-          {!isMobile && (
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="fixed inset-0 object-cover w-full h-full opacity-30 -z-10"
-            >
-              <source src="https://assets.mixkit.co/videos/preview/mixkit-night-city-traffic-1234-large.mp4" type="video/mp4" />
-            </video>
-          )}
-
-          <AnimatePresence>
-            {!loading && (
-              <motion.main
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="relative z-10"
-              >
-                {/* HERO */}
-                <section className="h-screen flex flex-col items-center justify-center text-center px-6">
-                  <h1 className="glitch mb-8" data-text="VISIBLE SAFETY">
-                    VISIBLE<br /><span className="text-yellow-400">SAFETY</span>
-                  </h1>
-                  <p className="text-2xl md:text-3xl text-cyan-400 tracking-widest">
-                    The world's first self-illuminating seatbelt
-                  </p>
-                  <motion.button
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="mt-16 px-10 py-5 bg-yellow-400 text-black text-xl font-black rounded-full shadow-2xl"
-                    onClick={() => window.open('https://google.com', '_blank')}
-                  >
-                    REQUEST DEMO
-                  </motion.button>
-                </section>
-
-                {/* 3D Canvas */}
-                <section className="h-screen relative">
-                  <Canvas
-                    shadows={!isMobile}
-                    gl={{ antialias: !isMobile, powerPreference: "high-performance" }}
-                    camera={{ position: [0, 0, 10], fov: isMobile ? 60 : 50 }}
-                  >
-                    <Scene />
-                  </Canvas>
-                </section>
-
-                {/* AR Section */}
-                <section className="h-screen flex flex-col items-center justify-center px-6 bg-black">
-                  <h2 className="text-4xl md:text-6xl font-black text-yellow-400 mb-8 text-center">
-                    TRY IN YOUR SPACE
-                  </h2>
-
-                  <model-viewer
-                    src="https://assets.vercel.sh/seatbelt-luma.glb"
-                    ar
-                    ar-modes="webxr scene-viewer quick-look"
-                    camera-controls
-                    auto-rotate
-                    shadow-intensity="1"
-                    exposure="1.2"
-                    style={{ width: '100%', height: '70vh', background: '#000' }}
-                  >
-                    <button
-                      slot="ar-button"
-                      className="px-12 py-7 bg-cyan-400 text-black text-3xl font-black rounded-3xl shadow-2xl"
-                      style={{ bottom: '30px', left: '50%', transform: 'translateX(-50%)', position: 'absolute' }}
-                    >
-                      ACTIVATE AR VIEW
-                    </button>
-                  </model-viewer>
-                </section>
-              </motion.main>
-            )}
-          </AnimatePresence>
-
-          {/* BLACKOUT MODE */}
-          <AnimatePresence>
-            {blackout && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black z-50 flex items-center justify-center text-yellow-400 text-7xl md:text-9xl font-black text-center leading-tight"
-              >
-                BLACKOUT<br />MODE
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
-      );
-    };
-
-    createRoot(document.getElementById('root')).render(<App />);
+  <div class="noise-overlay"></div>
+  <div class="exposure-flash" id="exposureFlash"></div>
+  <section class="hero" id="hero">
+    <div class="eyebrow">SEQUENCE_04 // FINDABILITY</div>
+    <h1 class="hero-line"><span>In the dark, you don't lose safety.</span><br><span class="fade-part" id="fadePart">You lose the ability to</span> <span class="focus-part blurred" id="focusPart">find it</span> <span class="instantly" id="instantlyWord">instantly</span></h1>
+  </section>
+  <button class="retinal-toggle" id="retinalToggle" aria-label="Activate retinal simulation">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4 M12 18v4 M2 12h4 M18 12h4"/><path d="M4.93 4.93l2.83 2.83 M16.24 16.24l2.83 2.83"/><path d="M4.93 19.07l2.83-2.83 M16.24 7.76l2.83-2.83"/></svg>
+  </button>
+  <div class="scene-container">
+    <div class="scene-layer layer-bg" id="layerBg"></div>
+    <div class="scene-layer layer-factory"><div class="factory-belt"></div></div>
+    <div class="scene-layer layer-luma"><div class="luma-belt" id="lumaBelt"><div class="luma-weave"></div><div class="luma-gaps"></div><div class="decay-mask" id="decayMask"></div></div></div>
+    <div class="scene-layer layer-type"></div>
+  </div>
+  <div class="timeline-wrapper">
+    <div class="timeline-track"></div>
+    <div class="tracer-line" id="tracerLine"></div>
+    <div class="tracer-pip" id="tracerPip"></div>
+    <div class="markers-container">
+      <div class="marker" data-marker="MKR-01" data-position="0"><div class="marker-label">MKR-01</div><div class="marker-copy">Acquired without thought.</div><div class="marker-meta">~10H POST-CHARGE</div></div>
+      <div class="marker" data-marker="MKR-02" data-position="33.33"><div class="marker-label">MKR-02</div><div class="marker-copy">No delay introduced.</div><div class="marker-meta">~10H POST-CHARGE</div></div>
+      <div class="marker" data-marker="MKR-03" data-position="66.66"><div class="marker-label">MKR-03</div><div class="marker-copy">Attention required.</div><div class="marker-meta">~10H POST-CHARGE</div></div>
+      <div class="marker" data-marker="MKR-04" data-position="100"><div class="marker-label">MKR-04</div><div class="marker-copy">The final threshold.</div><div class="marker-meta">~10H POST-CHARGE</div></div>
+    </div>
+  </div>
+  <div class="scroll-capture" id="scrollCapture"></div>
+  <script>
+    (function(){'use strict';const state={toggled:false,scrollProgress:0,tracerPosition:10,targetTracerPosition:10,velocity:0,detentEngaged:false};const SPRING={stiffness:50,damping:24,mass:2.4};const DETENT_RANGE=7;const elements={hero:document.getElementById('hero'),fadePart:document.getElementById('fadePart'),focusPart:document.getElementById('focusPart'),instantlyWord:document.getElementById('instantlyWord'),retinalToggle:document.getElementById('retinalToggle'),layerBg:document.getElementById('layerBg'),lumaBelt:document.getElementById('lumaBelt'),decayMask:document.getElementById('decayMask'),exposureFlash:document.getElementById('exposureFlash'),tracerLine:document.getElementById('tracerLine'),tracerPip:document.getElementById('tracerPip'),scrollCapture:document.getElementById('scrollCapture')};const markers=Array.from(document.querySelectorAll('.marker'));let mouseX=0,mouseY=0,parallaxX=0,parallaxY=0;document.addEventListener('mousemove',(e)=>{mouseX=(e.clientX/window.innerWidth-0.5)*2;mouseY=(e.clientY/window.innerHeight-0.5)*2});function updateParallax(){parallaxX+=(mouseX-parallaxX)*0.05;parallaxY+=(mouseY-parallaxY)*0.05;elements.layerBg.style.transform=`translate(${parallaxX*6}px, ${parallaxY*6}px)`;elements.lumaBelt.parentElement.style.transform=`translate(${-parallaxX*12}px, ${-parallaxY*12}px)`;requestAnimationFrame(updateParallax)}updateParallax();elements.retinalToggle.addEventListener('click',activateRetinalSimulation);function activateRetinalSimulation(){if(state.toggled)return;state.toggled=true;elements.fadePart.classList.add('hidden');setTimeout(()=>{elements.exposureFlash.classList.add('active');elements.focusPart.classList.remove('blurred');elements.focusPart.classList.add('sharp');elements.lumaBelt.classList.add('active');elements.retinalToggle.classList.add('active');elements.hero.classList.add('pinned');setTimeout(()=>{elements.instantlyWord.classList.add('visible')},80);setTimeout(()=>{elements.exposureFlash.classList.remove('active')},600)},400)}elements.retinalToggle.addEventListener('mouseenter',()=>{if(!state.toggled)elements.fadePart.classList.add('hidden')});elements.retinalToggle.addEventListener('mouseleave',()=>{if(!state.toggled)elements.fadePart.classList.remove('hidden')});function getMaxScroll(){return elements.scrollCapture.offsetHeight-window.innerHeight}function handleScroll(){const maxScroll=getMaxScroll();state.scrollProgress=Math.min(window.scrollY/maxScroll,1);state.targetTracerPosition=10+(state.scrollProgress*80);updateTracer();checkDetents();updateDecay()}function updateTracer(){const displacement=state.targetTracerPosition-state.tracerPosition;const acceleration=(displacement*SPRING.stiffness)/SPRING.mass;state.velocity+=acceleration;state.velocity*=(1-SPRING.damping/100);state.tracerPosition+=state.velocity;state.tracerPosition=Math.max(10,Math.min(90,state.tracerPosition));elements.tracerLine.style.width=`${state.tracerPosition-10}%`;elements.tracerPip.style.left=`${state.tracerPosition}%`}function checkDetents(){let nearestMarker=null,nearestDistance=Infinity;markers.forEach((marker)=>{const markerPos=parseFloat(marker.dataset.position);const distance=Math.abs(state.tracerPosition-(10+markerPos*0.8));if(distance<nearestDistance){nearestDistance=distance;nearestMarker=marker}marker.classList.remove('detent-active')});if(nearestDistance<=DETENT_RANGE){state.detentEngaged=true;nearestMarker.classList.add('detent-active');state.velocity*=0.5;state.targetTracerPosition=10+parseFloat(nearestMarker.dataset.position)*0.8}else{state.detentEngaged=false}}let noiseOffset=0;function simpleNoise(x){const n=Math.sin(x*12.9898)*43758.5453;return n-Math.floor(n)}function updateDecay(){if(!state.toggled)return;noiseOffset+=0.01;const decayFactor=Math.pow(state.scrollProgress,1.5);const erosionMask=[];for(let i=0;i<10;i++){erosionMask.push(simpleNoise(noiseOffset+i*0.7)*decayFactor)}const avgErosion=erosionMask.reduce((a,b)=>a+b,0)/erosionMask.length;const saturationLoss=Math.min(avgErosion*2,1);const luminanceLoss=Math.min(avgErosion,1);if(state.scrollProgress>0.3){elements.lumaBelt.classList.add('decaying');const gradientStops=erosionMask.map((val,i)=>{const pos=(i/erosionMask.length)*100;const opacity=1-(val*luminanceLoss);return `rgba(0,0,0,${opacity}) ${pos}%`}).join(', ');elements.decayMask.style.background=`linear-gradient(180deg, ${gradientStops})`;elements.lumaBelt.style.filter=`saturate(${1-saturationLoss}) brightness(${1-luminanceLoss*0.5})`}}markers.forEach(marker=>{marker.addEventListener('click',()=>{const targetPos=parseFloat(marker.dataset.position);state.targetTracerPosition=10+targetPos*0.8;window.scrollTo({top:(targetPos/100)*getMaxScroll(),behavior:'smooth'})})});window.addEventListener('scroll',handleScroll,{passive:true});window.addEventListener('resize',handleScroll);handleScroll();function animate(){if(!state.detentEngaged)updateTracer();requestAnimationFrame(animate)}animate()})();
   </script>
 </body>
 </html>
