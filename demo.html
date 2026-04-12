@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>LUMA LATCH — FORENSIC PHOTOLUMINESCENT WEAVE DEMO</title>
+  
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { 
+      height:100%; 
+      overflow-x:hidden; 
+      background:#000; 
+      font-family:'Courier New', monospace;
+      color:#fff;
+    }
+    
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 1;
+    }
+    
+    .scroll-content {
+      position: relative;
+      z-index: 2;
+      height: 500vh; /* Enable scroll-driven decay */
+    }
+    
+    .section {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      pointer-events: none;
+    }
+    
+    .section h1 {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 700;
+      letter-spacing: 0.3rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 20px rgba(180, 255, 200, 0.3);
+    }
+    
+    .section p {
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      max-width: 600px;
+      text-align: center;
+      line-height: 1.8;
+      color: #888;
+    }
+    
+    .highlight {
+      color: #B4FFC8;
+      font-weight: 600;
+    }
+    
+    .progress-indicator {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #333;
+      transition: background 0.3s ease;
+    }
+    
+    .progress-dot.active {
+      background: #B4FFC8;
+      box-shadow: 0 0 10px #B4FFC8;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      transition: opacity 0.5s ease;
+    }
+    
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .loading-text {
+      font-size: 1.5rem;
+      letter-spacing: 0.5rem;
+      color: #B4FFC8;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    
+    .controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 2rem;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: #666;
+    }
+    
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .control-item span {
+      color: #B4FFC8;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading">
+    <div class="loading-text">INITIALIZING OPTICAL SYSTEM...</div>
+  </div>
+  
+  <!-- Progress Indicator -->
+  <div class="progress-indicator" id="progress-dots">
+    <div class="progress-dot active"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+  </div>
+  
+  <!-- Controls Info -->
+  <div class="controls">
+    <div class="control-item">SCROLL: <span>LUMINANCE DECAY</span></div>
+    <div class="control-item">CURSOR: <span>MICRO SPECULAR</span></div>
+    <div class="control-item">TIME: <span>STOCHASTIC EROSION</span></div>
+  </div>
+  
+  <!-- Canvas Container -->
+  <div id="canvas-container"></div>
+  
+  <!-- Scroll Content -->
+  <div class="scroll-content">
+    <section class="section">
+      <h1><span class="highlight">FORENSIC</span><br/>PHOTOLUMINESCENT<br/>WEAVE</h1>
+      <p>A physically believable material system visualizing trapped photonic energy within a woven polymer structure.</p>
+    </section>
+    
+    <section class="section">
+      <h1><span class="highlight">SUBSURFACE</span><br/>LIGHT CONTAINMENT</h1>
+      <p>Light appears trapped beneath fibers. Emission is strongest in V-shaped recess centers with edge falloff toward thread boundaries.</p>
+    </section>
+    
+    <section class="section">
+      <h1><span class="highlight">STOCHASTIC</span><br/>DECAY</h1>
+      <p>Multi-frequency noise creates uneven light death—micro "starvation" effect instead of linear fades.</p>
+    </section>
+    
+    <section class="section">
+      <h1><span class="highlight">SPECTRAL</span><br/>COMPRESSION</h1>
+      <p>Purkinje effect simulation: saturation drops before brightness, green shifts toward neutral grey as luminance decreases.</p>
+    </section>
+    
+    <section class="section">
+      <h1><span class="highlight">MATERIAL</span><br/>TRUTH</h1>
+      <p>Albedo: 0.05 | Roughness: 0.8 | Reflectance: 0.05 | Emission ONLY from gaps (never surface glow)</p>
+    </section>
+  </div>
+  
+  <!-- Import Map for Three.js ecosystem -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1?dev",
+      "react-dom": "https://esm.sh/react-dom@18.3.1?dev",
+      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+      "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.16.8",
+      "@react-three/drei": "https://esm.sh/@react-three/drei@9.112.0",
+      "three": "https://esm.sh/three@0.168.0"
+    }
+  }
+  </script>
+  
+  <!-- Application Script -->
+  <script type="module">
+    import React, { useRef, useMemo, useEffect, useState, Suspense } from 'react';
+    import ReactDOM from 'react-dom/client';
+    import { Canvas, useFrame, useThree } from '@react-three/fiber';
+    import { TextureLoader, PlaneGeometry, ShaderMaterial, Vector2 } from 'three';
+    
+    // ============================================
+    // SHADER SOURCES (Inline for standalone demo)
+    // ============================================
+    
+    const vertexShader = `
+      varying vec2 vUv;
+      varying vec3 vPosition;
+      varying vec3 vNormal;
+      
+      void main() {
+        vUv = uv;
+        vPosition = position;
+        vNormal = normal;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+    
+    const fragmentShader = `
+      precision highp float;
+      
+      uniform float uTime;
+      uniform sampler2D uLumaMask;
+      uniform vec2 uResolution;
+      uniform vec2 uMouse;
+      uniform float uScrollProgress;
+      uniform float uPixelRatio;
+      
+      varying vec2 vUv;
+      varying vec3 vPosition;
+      varying vec3 vNormal;
+      
+      // Simplex 2D noise
+      vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+      
+      float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                           -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy));
+        vec2 x0 = v - i + dot(i, C.xx);
+        vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod(i, 289.0);
+        vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+        m = m*m;
+        m = m*m;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+        vec3 g;
+        g.x = a0.x * x0.x + h.x * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+      }
+      
+      float fbm(vec2 st, int octaves) {
+        float value = 0.0;
+        float amplitude = 0.5;
+        for (int i = 0; i < octaves; i++) {
+          value += amplitude * snoise(st);
+          st *= 2.0;
+          amplitude *= 0.5;
+        }
+        return value;
+      }
+      
+      // Physical constants
+      const float L0 = 300.0;
+      const float decayRate = 0.25;
+      const float decayExponent = 1.6;
+      const float albedo = 0.05;
+      const vec3 emeraldSignal = vec3(0.706, 1.0, 0.784);
+      
+      float calculateCurvature(vec2 uv) {
+        float texelSize = 1.0 / 512.0;
+        float center = texture2D(uLumaMask, uv).r;
+        float left = texture2D(uLumaMask, uv + vec2(-texelSize, 0.0)).r;
+        float right = texture2D(uLumaMask, uv + vec2(texelSize, 0.0)).r;
+        float top = texture2D(uLumaMask, uv + vec2(0.0, -texelSize)).r;
+        float bottom = texture2D(uLumaMask, uv + vec2(0.0, texelSize)).r;
+        float laplacian = (left + right + top + bottom) - 4.0 * center;
+        return clamp(laplacian * 2.0 + 0.5, 0.0, 1.0);
+      }
+      
+      float calculateAO(vec2 uv, float weavePattern) {
+        float contrast = abs(dFdx(weavePattern)) + abs(dFdy(weavePattern));
+        float ao = 1.0 - smoothstep(0.0, 0.8, contrast);
+        return mix(0.6, 1.0, ao);
+      }
+      
+      float stochasticDecay(float time, vec2 uv) {
+        float noise1 = snoise(uv * 500.0 + time * 0.1);
+        float noise2 = snoise(uv * 250.0 - time * 0.05) * 0.5;
+        float noise3 = fbm(uv * 1000.0, 3) * 0.25;
+        float combinedNoise = noise1 + noise2 + noise3;
+        float threshold = 0.35 - (time * 0.02);
+        return smoothstep(threshold, threshold + 0.15, combinedNoise);
+      }
+      
+      vec3 spectralShift(vec3 baseColor, float luminance) {
+        float normalizedLum = clamp(luminance / 300.0, 0.0, 1.0);
+        float desaturationFactor = 1.0 - pow(normalizedLum, 0.7);
+        vec3 neutralGrey = vec3(0.75, 0.78, 0.76);
+        vec3 shiftedColor = mix(baseColor, neutralGrey, desaturationFactor * 0.6);
+        shiftedColor *= pow(normalizedLum, 0.85);
+        return shiftedColor;
+      }
+      
+      float temporalFlicker(float time, float decayProgress) {
+        float flicker1 = snoise(vec2(time * 50.0, 0.0)) * 0.03;
+        float flicker2 = sin(time * 8.0) * cos(time * 13.0) * 0.02;
+        float damping = 1.0 - decayProgress * 0.7;
+        return 1.0 + (flicker1 + flicker2) * damping;
+      }
+      
+      float microSpecular(vec2 uv, vec3 normal) {
+        if (uMouse.x < 0.0 || uMouse.y < 0.0) return 0.0;
+        vec2 mouseUV = uMouse / uResolution;
+        float dist = distance(uv, mouseUV);
+        float highlight = exp(-dist * 15.0) * 0.08;
+        float microDetail = snoise(uv * 200.0 + uTime * 0.2) * 0.5 + 0.5;
+        return highlight * microDetail;
+      }
+      
+      void main() {
+        vec2 uv = vUv;
+        float weavePattern = texture2D(uLumaMask, uv).r;
+        float stochasticErosion = stochasticDecay(uTime, uv);
+        
+        float curvatureBias = calculateCurvature(uv);
+        float edgeFalloff = smoothstep(0.0, 0.3, weavePattern);
+        edgeFalloff *= smoothstep(1.0, 0.7, weavePattern);
+        float subsurfaceContainment = curvatureBias * edgeFalloff;
+        
+        float scrollTime = uScrollProgress * 10.0;
+        float effectiveTime = uTime * 0.1 + scrollTime;
+        float rawLuminance = L0 / pow((1.0 + decayRate * effectiveTime), decayExponent);
+        float normalizedLuminance = rawLuminance / L0;
+        
+        float aoMultiplier = calculateAO(uv, weavePattern);
+        
+        float baseEmission = weavePattern * stochasticErosion;
+        float containedEmission = baseEmission * subsurfaceContainment;
+        containedEmission *= aoMultiplier;
+        float finalEmission = containedEmission * normalizedLuminance;
+        finalEmission *= temporalFlicker(uTime, uScrollProgress);
+        finalEmission = max(finalEmission, 0.0);
+        
+        vec3 spectralColor = spectralShift(emeraldSignal, rawLuminance);
+        float specularHighlight = microSpecular(uv, vNormal);
+        
+        vec3 baseAlbedo = vec3(albedo);
+        float threadNoise = fbm(uv * 150.0, 4) * 0.5 + 0.5;
+        baseAlbedo *= (0.9 + threadNoise * 0.2);
+        
+        vec3 emissionLayer = spectralColor * finalEmission;
+        vec3 finalColor = baseAlbedo + emissionLayer + vec3(specularHighlight);
+        finalColor = pow(finalColor, vec3(1.0 / 2.2));
+        
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+    
+    // ============================================
+    // LUMA MASK GENERATOR
+    // ============================================
+    
+    function generateLumaMask() {
+      const size = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, size, size);
+      
+      ctx.strokeStyle = '#2a2a2a';
+      ctx.lineWidth = 8;
+      
+      for (let i = -size; i < size * 2; i += 32) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + size, size);
+        ctx.stroke();
+      }
+      
+      for (let i = -size; i < size * 2; i += 32) {
+        ctx.beginPath();
+        ctx.moveTo(i, size);
+        ctx.lineTo(i - size, 0);
+        ctx.stroke();
+      }
+      
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const data = imageData.data;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 30;
+        data[i] = Math.max(0, Math.min(255, data[i] + noise));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      return canvas;
+    }
+    
+    // ============================================
+    // PHOTOLUMINESCENT WEAVE COMPONENT
+    // ============================================
+    
+    function PhotoluminescentWeave({ scrollProgress }) {
+      const materialRef = React.useRef();
+      const { size } = useThree();
+      
+      const lumaMaskTexture = useMemo(() => {
+        const canvas = generateLumaMask();
+        const texture = new TextureLoader().load(canvas.toDataURL());
+        texture.wrapS = texture.wrapT = 1000; // RepeatWrapping
+        texture.needsUpdate = true;
+        return texture;
+      }, []);
+      
+      const uniforms = useMemo(() => ({
+        uTime: { value: 0 },
+        uLumaMask: { value: lumaMaskTexture },
+        uResolution: { value: new Vector2(size.width * size.devicePixelRatio, size.height * size.devicePixelRatio) },
+        uMouse: { value: new Vector2(-1, -1) },
+        uScrollProgress: { value: scrollProgress },
+        uPixelRatio: { value: size.devicePixelRatio }
+      }), [lumaMaskTexture, size, scrollProgress]);
+      
+      useFrame((state) => {
+        if (materialRef.current) {
+          materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+          materialRef.current.uniforms.uScrollProgress.value = scrollProgress;
+          materialRef.current.uniforms.uResolution.value.set(
+            size.width * size.devicePixelRatio,
+            size.height * size.devicePixelRatio
+          );
+        }
+      });
+      
+      const handleMouseMove = (e) => {
+        if (materialRef.current && e.object) {
+          const rect = e.object.el.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width;
+          const y = 1.0 - (e.clientY - rect.top) / rect.height;
+          materialRef.current.uniforms.uMouse.value.set(x, y);
+        }
+      };
+      
+      const handleMouseLeave = () => {
+        if (materialRef.current) {
+          materialRef.current.uniforms.uMouse.value.set(-1, -1);
+        }
+      };
+      
+      return React.createElement('mesh', {
+        onPointerMove: handleMouseMove,
+        onPointerOut: handleMouseLeave
+      },
+        React.createElement('planeGeometry', { args: [2.5, 4] }),
+        React.createElement('shaderMaterial', {
+          ref: materialRef,
+          vertexShader,
+          fragmentShader,
+          uniforms,
+          depthWrite: true,
+          depthTest: true
+        })
+      );
+    }
+    
+    // ============================================
+    // MAIN SCENE
+    // ============================================
+    
+    function Scene({ scrollProgress }) {
+      return React.createElement(Canvas, {
+        camera: { position: [0, 0, 5], fov: 50 },
+        gl: { antialias: true, alpha: true },
+        dpr: [1, 2],
+        style: { background: '#000000' }
+      },
+        React.createElement('color', { attach: 'background', args: ['#000000'] }),
+        React.createElement('ambientLight', { intensity: 0.2 }),
+        React.createElement(Suspense, { fallback: null },
+          React.createElement(PhotoluminescentWeave, { scrollProgress })
+        ),
+        React.createElement('fog', { attach: 'fog', args: ['#000000', 3, 8] })
+      );
+    }
+    
+    // ============================================
+    // APP COMPONENT
+    // ============================================
+    
+    function App() {
+      const [scrollProgress, setScrollProgress] = useState(0);
+      const [loading, setLoading] = useState(true);
+      
+      useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 2000);
+        return () => clearTimeout(timer);
+      }, []);
+      
+      useEffect(() => {
+        const handleScroll = () => {
+          const scrollTop = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = Math.min(1, Math.max(0, scrollTop / docHeight));
+          setScrollProgress(progress);
+          
+          // Update progress dots
+          const dots = document.querySelectorAll('.progress-dot');
+          const totalSections = 5;
+          const activeIndex = Math.floor(progress * totalSections);
+          dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === activeIndex);
+          });
+        };
+        
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+        
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+      
+      return React.createElement(React.Fragment, null,
+        React.createElement('div', {
+          className: `loading-overlay ${loading ? '' : 'hidden'}`,
+          id: 'loading'
+        },
+          React.createElement('div', { className: 'loading-text' }, 'INITIALIZING OPTICAL SYSTEM...')
+        ),
+        React.createElement(Scene, { scrollProgress })
+      );
+    }
+    
+    // ============================================
+    // RENDER
+    // ============================================
+    
+    const root = ReactDOM.createRoot(document.getElementById('canvas-container'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
