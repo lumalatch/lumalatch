@@ -131,6 +131,26 @@ export default function FluidPlane() {
     }
 
     // =========================
+    // VIEW-DEPENDENT ANISOTROPIC REFLECTION (Fresnel-like)
+    // =========================
+    float anisotropicReflection(vec2 uv, float depth){
+      // Simulate view-angle dependent fiber reflection
+      vec2 viewDir = uv - 0.5;
+      float viewAngle = length(viewDir);
+      
+      // Edge brightening (Fresnel approximation)
+      float fresnel = pow(viewAngle, 0.5) * 0.3;
+      
+      // Anisotropic highlight along fiber directions
+      vec2 fiberDir = normalize(vec2(1.0, 0.5));
+      float alignment = abs(dot(normalize(viewDir + 0.001), fiberDir));
+      float specHighlight = pow(alignment, 8.0) * 0.15;
+      
+      // Depth-based attenuation
+      return (fresnel + specHighlight) * (1.0 - depth * 0.4);
+    }
+
+    // =========================
     // ENERGY CONSERVATION: REDISTRIBUTION NOT AMPLIFICATION
     // =========================
     vec3 energyConservation(vec3 incoming, float intensity){
@@ -140,6 +160,26 @@ export default function FluidPlane() {
       
       // Preserve color ratios while scaling
       return incoming * scale;
+    }
+
+    // =========================
+    // INTER-LAYER LIGHT BLEEDING (depth coherence)
+    // =========================
+    float interLayerBleed(float light, float depth, float layerIdx){
+      // Simulate light bleeding between depth layers
+      float bleedContribution = 0.0;
+      
+      // Light from shallower layers bleeds deeper
+      if(layerIdx > 0.0){
+        bleedContribution += light * 0.08 * (1.0 - depth);
+      }
+      
+      // Deep layers contribute ambient occlusion to shallow
+      if(layerIdx < 1.0){
+        bleedContribution -= light * 0.04 * depth;
+      }
+      
+      return clamp(light + bleedContribution, 0.0, 1.0);
     }
 
     // =========================
@@ -162,6 +202,19 @@ export default function FluidPlane() {
     }
 
     // =========================
+    // VELOCITY-ADAPTIVE NOISE FILTERING (temporal stability)
+    // =========================
+    float velocityFilteredNoise(vec2 uv, float vel){
+      // Reduce high-frequency noise at high velocities to prevent shimmer
+      float baseFreq = 3.0;
+      float velocityDamping = 1.0 / (1.0 + abs(vel) * 0.8);
+      
+      float filteredFreq = baseFreq * (0.6 + 0.4 * velocityDamping);
+      
+      return noise(uv * filteredFreq + uTime * 0.35);
+    }
+
+    // =========================
     // TEMPORAL AFTERIMAGE WITH IMPROVED STABILITY
     // =========================
     float afterimage(float x, float vel){
@@ -171,15 +224,23 @@ export default function FluidPlane() {
     }
 
     // =========================
-    // MICROGEOMETRY DEFORMATION IN UV SPACE
+    // MICROGEOMETRY DEFORMATION IN UV SPACE (depth-parallax consistent)
     // =========================
     vec2 microDeform(vec2 uv, float depth){
       // Subtle UV displacement based on depth layer
+      // Parallax-consistent: deeper layers deform more
+      float parallaxScale = 0.015 + depth * 0.012;
+      
       vec2 deformation = vec2(
-        sin(uTime * 0.35 + depth) * 0.02,
-        cos(uTime * 0.3 - depth * 0.5) * 0.02
+        sin(uTime * 0.35 + depth * 2.0) * parallaxScale,
+        cos(uTime * 0.3 - depth * 1.5) * parallaxScale
       );
-      return uv + deformation * uDepth;
+      
+      // Add micro-variation per layer
+      float microVar = noise(uv * 80.0 + depth * 3.0) * 0.005;
+      deformation += vec2(microVar, microVar * 0.7);
+      
+      return uv + deformation;
     }
 
     void main(){
@@ -196,11 +257,13 @@ export default function FluidPlane() {
       float diag = uv.x * 0.85 + uv.y;
       float threshold = 1.12 - uScroll * 1.2;
       
-      // Wave and turbulence with reduced amplitude for stability
-      float wave = sin(uv.x * (4.0 + uScroll * 11.0) + uTime * 2.0)
-                 * (0.025 + uScroll * 0.05);
+      // Velocity-adaptive wave amplitude (reduced shimmer)
+      float velocityDamping = 1.0 / (1.0 + abs(uVelocity) * 0.5);
       
-      float turb = noise(uv * (2.8 + uScroll * 6.5) + uTime * 0.5)
+      float wave = sin(uv.x * (4.0 + uScroll * 11.0) + uTime * 2.0)
+                 * (0.025 + uScroll * 0.05) * velocityDamping;
+      
+      float turb = velocityFilteredNoise(uv * (2.8 + uScroll * 6.5), uVelocity)
                  * (0.02 + uScroll * 0.04);
       
       float surface = threshold + wave + turb;
@@ -217,6 +280,9 @@ export default function FluidPlane() {
       
       // Micro-occlusion variation
       channels *= 0.6 + 0.4 * noise(uv * 95.0 + uDepth);
+      
+      // Apply inter-layer light bleeding
+      channels = interLayerBleed(channels, uDepth, uDepth);
 
       // =========================
       // TEMPORAL PERSISTENCE (reduced for stability)
@@ -250,6 +316,10 @@ export default function FluidPlane() {
       
       // Apply scroll field activation
       col *= field;
+      
+      // Apply view-dependent anisotropic reflection
+      float refl = anisotropicReflection(uv, uDepth);
+      col += vec3(refl) * 0.25;
 
       // =========================
       // ENERGY CONSERVATION PASS
