@@ -1,0 +1,54 @@
+/* 🌑 THE SCOTOPIC VOID: Enforcing #050505 Absolute Black */
+.scotopic-container {
+    background-color: #050505;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: #B4FFC8;
+    /* 520.4nm Emerald-Lime primary */
+}
+
+.cinematic-viewport {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.cinematic-layer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: var(--mat-opacity, 0);
+    filter: blur(var(--mat-blur, 10px));
+    transform: scale(var(--phys-scale, 1)) translateY(var(--phys-y, 0px));
+    transition: transform 0.1s linear;
+    /* Smooth micro-adjustments */
+}
+
+.technical-label {
+    position: absolute;
+    bottom: 10%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    opacity: var(--nar-opacity, 0);
+    transform: translateY(var(--nar-y, 20px));
+}
+
+/* 🟢 LIGHT EMISSION: Volumetric Subsurface Scattering simulation */
+.product-silhouette {
+    width: 300px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(180, 255, 200, 0.2) 0%, rgba(5, 5, 5, 0) 70%);
+    border: 1px solid rgba(180, 255, 200, 0.1);
+    box-shadow: 0 0 40px rgba(180, 255, 200, var(--trans-fade, 0));
+}

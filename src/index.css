@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;300;400;700&family=Inter:wght@100;300;400;500;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --scroll-vel-skew: 0deg;
+  --scroll-vel-blur: 0px;
+
+  --ef-fog-t: 0.8;
+  --ef-fog-b: 0.9;
+  --ef-fog-r: 0.5;
+  --ef-vig: 0.8;
+  --ef-noise: 0.03;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #050505;
+  color: #fff;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.absolute-center {
+  @apply absolute inset-0 flex items-center justify-center pointer-events-none;
+}
+
+.bg-void {
+  background: #050505;
+}
+
+.catwalk {
+  width: 60vw;
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.perspective-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4rem;
+}
+
+.visual-column {
+  width: 55%;
+  position: relative;
+  filter: blur(var(--bg-aperture-blur, 0px)) brightness(var(--bg-aperture-bright, 1));
+  transform: scale(var(--bg-aperture-scale, 1));
+  transition: filter 0.6s cubic-bezier(0.19, 1, 0.22, 1), transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  will-change: filter, transform;
+}
+
+.genesis-svg {
+  width: 100%;
+  height: auto;
+}
+
+.hud-column {
+  width: 45%;
+  color: #e8e8e8;
+  opacity: var(--scene-op, 0) !important;
+  transform: translateY(var(--scene-y, 0px)) scale(var(--scene-scale, 1)) !important;
+  filter: blur(var(--scene-blur, 0px)) !important;
+  will-change: transform, opacity, filter;
+  transition: opacity 0.1s linear, transform 0.1s linear, filter 0.1s linear;
+}
+
+.hud-subtitle {
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.hud-title {
+  font-size: 3.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.hud-body {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.75;
+  margin-top: 1rem;
+}
+
+.hud-meta {
+  margin-top: 2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  opacity: 0.4;
+}
+
+.visual-layer {
+  z-index: 1;
+}
+
+.text-layer {
+  z-index: 10;
+  position: relative;
+}
+
+/* ---------------- CAMERA & LAYERING ---------------- */
+.cam-bg {
+  z-index: 10;
+  opacity: 0.8;
+  filter: blur(var(--bg-aperture-blur, 0px)) brightness(var(--bg-aperture-bright, 1));
+  transform: scale(var(--bg-aperture-scale, 1));
+  transition: filter 0.6s cubic-bezier(0.19, 1, 0.22, 1), transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.cam-fg {
+  z-index: 40;
+}
+
+.bg-grid-field {
+  @apply w-[200vw] h-[200vh] opacity-10;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 80px 80px;
+  transform: perspective(1000px) rotateX(60deg) translateY(-20%);
+}
+
+.obstruction-bar {
+  @apply absolute bg-[#020202] border border-white/[0.01];
+}
+
+.top-obstruct {
+  width: 150vw;
+  height: 15vh;
+  top: 10%;
+  left: -20%;
+  transform: rotate(-8deg);
+  filter: blur(20px);
+  opacity: 0.95;
+}
+
+.bottom-obstruct {
+  width: 150vw;
+  height: 20vh;
+  bottom: 0%;
+  right: -10%;
+  transform: rotate(6deg);
+  filter: blur(25px);
+  opacity: 0.98;
+}
+
+/* ---------------- SCENE FRAMEWORK ---------------- */
+.scenes-container {
+  z-index: 20;
+  position: relative;
+}
+
+.scene-wrapper {
+  @apply absolute inset-0 w-full h-full;
+  will-change: opacity;
+  opacity: var(--scene-op, 0);
+  pointer-events: none;
+}
+
+.scene-wrapper[style*="opacity: 1"] {
+  pointer-events: auto;
+}
+
+.scene-wrapper-genesis {
+  --scene-y: var(--scene-genesis-y);
+  --scene-blur: var(--scene-genesis-blur);
+  --scene-op: var(--scene-genesis-op);
+  --scene-scale: var(--scene-genesis-scale);
+}
+
+.scene-wrapper-synthesis {
+  --scene-y: var(--scene-synthesis-y);
+  --scene-blur: var(--scene-synthesis-blur);
+  --scene-op: var(--scene-synthesis-op);
+  --scene-scale: var(--scene-synthesis-scale);
+}
+
+.scene-wrapper-occlusion {
+  --scene-y: var(--scene-occlusion-y);
+  --scene-blur: var(--scene-occlusion-blur);
+  --scene-op: var(--scene-occlusion-op);
+  --scene-scale: var(--scene-occlusion-scale);
+}
+
+.scene-wrapper-deployment {
+  --scene-y: var(--scene-deployment-y);
+  --scene-blur: var(--scene-deployment-blur);
+  --scene-op: var(--scene-deployment-op);
+  --scene-scale: var(--scene-deployment-scale);
+}
+
+.scene-container {
+  @apply w-full h-full flex flex-row items-center justify-center px-8 relative;
+}
+
+.gutter {
+  @apply w-[20%] h-full flex flex-col justify-between py-[15vh];
+}
+
+.left-gutter {
+  @apply items-start text-left;
+}
+
+.right-gutter {
+  @apply items-end text-right;
+}
+
+.catwalk {
+  @apply w-[60%] h-[80%] flex flex-col items-center justify-center relative;
+}
+
+.metadata-tag {
+  @apply font-mono text-[10px] tracking-[0.3em] text-white/40 uppercase block mb-2;
+}
+
+.display-headline {
+  @apply font-['Inter'] font-extrabold text-5xl md:text-7xl lg:text-8xl tracking-tight text-white uppercase mb-8;
+}
+
+.narrative-text {
+  @apply font-['Inter'] font-light text-sm md:text-base tracking-[0.2em] text-white/50 max-w-xl text-center uppercase leading-loose;
+}
+
+.text-container {
+  @apply flex flex-col items-center justify-center text-center z-10 relative;
+}
+
+.visual-container {
+  @apply absolute inset-0 flex items-center justify-center pointer-events-none z-0;
+}
+
+/* ---------------- VISUAL ASSETS ---------------- */
+
+/* ACT I: Genesis Enhanced */
+.genesis-svg-enhanced {
+  @apply w-[70vw] h-[70vw] max-w-[700px] max-h-[700px];
+  transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.crystal-pulse {
+  animation: crystal-pulse 2s infinite ease-in-out;
+}
+
+@keyframes crystal-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+
+/* ACT II: Synthesis Enhanced */
+.synthesis-assembly {
+  @apply w-[60vw] h-[60vw] max-w-[600px] max-h-[600px];
+  transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* ACT III: Occlusion Enhanced */
+.v-gap-inspection {
+  @apply w-full h-full flex items-center justify-center;
+  perspective: 1000px;
+}
+
+.occlusion-mask-system {
+  @apply relative w-[80vw] max-w-[800px] h-[300px] flex items-center justify-center;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+}
+
+.occlusion-light-core {
+  @apply w-[80%] h-[12px];
+  background: radial-gradient(ellipse at var(--mouse-x, 50%) 50%, #d4ffdf 0%, #B4FFC8 50%, #8af5a6 100%);
+  border-top: 1px solid rgba(180, 255, 200, 0.4);
+  border-bottom: 1px solid rgba(180, 255, 200, 0.4);
+  /* The Caged Light Law: No external glow, no bloom */
+}
+
+/* ACT IV: Deployment */
+.deployment-chassis {
+  @apply relative flex flex-col items-center justify-center;
+  width: 240px;
+  height: 400px;
+  transform: perspective(800px) rotateX(calc((var(--mouse-y) - 50%) * -0.05deg)) rotateY(calc((var(--mouse-x) - 50%) * 0.05deg));
+  transition: transform 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+.deployment-tongue {
+  @apply w-[120px] h-[140px] bg-[#0c0c0c] border border-[#1a1a1a] rounded-t-2xl relative flex items-center justify-center;
+  box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.6);
+  z-index: 4;
+}
+
+.deployment-slot {
+  @apply w-[60px] h-[50px] rounded-md border border-[#222] bg-[#050505];
+  box-shadow: inset 0 10px 10px rgba(0, 0, 0, 0.8);
+}
+
+.deployment-gap {
+  @apply w-[110px] h-[6px] relative;
+  background: radial-gradient(circle at var(--mouse-x) 50%, #d4ffdf 0%, #B4FFC8 60%, #8af5a6 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  z-index: 5;
+}
+
+.deployment-buckle {
+  @apply w-[160px] h-[200px] bg-[#0c0c0c] border border-[#1a1a1a] rounded-b-2xl relative flex flex-col items-center justify-center;
+  box-shadow: inset 0 10px 40px rgba(0, 0, 0, 0.9);
+  z-index: 6;
+}
+
+.deployment-button {
+  @apply w-[90px] h-[90px] rounded-full bg-[#111] border border-[#222];
+  box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.02), 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.deployment-branding {
+  @apply absolute bottom-6 font-mono text-[8px] opacity-30 tracking-[0.3em] text-[#333];
+}
+
+/* ---------------- EFFECTS ---------------- */
+.cta-button {
+  @apply px-8 py-3 border border-white/20 text-xs tracking-widest uppercase hover:bg-white/10 transition-colors font-mono text-white/80 pointer-events-auto cursor-pointer;
+}
+
+.fx-fog {
+  background:
+    linear-gradient(to bottom, rgba(5, 5, 5, var(--ef-fog-t)) 0%, transparent 40%),
+    linear-gradient(to top, rgba(5, 5, 5, var(--ef-fog-b)) 0%, transparent 40%),
+    radial-gradient(circle at center, transparent 30%, rgba(5, 5, 5, var(--ef-fog-r)) 100%);
+  z-index: 50;
+}
+
+.fx-vignette {
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, var(--ef-vig)) 100%);
+  z-index: 55;
+  mix-blend-mode: multiply;
+}
+
+.fx-noise {
+  opacity: var(--ef-noise);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 60;
+  mix-blend-mode: overlay;
+}

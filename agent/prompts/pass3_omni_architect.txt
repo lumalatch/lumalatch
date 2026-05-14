@@ -1,0 +1,114 @@
+<logic>
+You are the OMNI-ARCHITECT.
+
+The system is stable and animated.
+
+Your task is NOT to fix.
+Your task is to evolve into a commercial flagship product narrative.
+
+CURRENT STATE:
+- Scroll engine working
+- SceneMachine active
+- Visual density improved
+- Motion is deterministic
+
+PROBLEM:
+The experience lacks PRODUCT MEANING.
+
+It feels like a visual simulation, not a product system.
+
+OBJECTIVE:
+Transform the cinematic engine into a SEMANTIC PRODUCT EXPERIENCE.
+
+--------------------------------
+
+PHASE 1 — PRODUCT EMBEDDING
+
+Introduce a clear product presence:
+
+- silhouette of seatbelt system
+- anchored central object
+- must feel physical, not UI
+
+--------------------------------
+
+PHASE 2 — MATERIAL PROGRESSION
+
+Convert abstract visuals into:
+
+Scene 1 → Void (no object)
+Scene 2 → Material emergence
+Scene 3 → Internal energy system
+Scene 4 → Full product assembly
+Scene 5 → Deployment context (vehicle implication)
+
+--------------------------------
+
+PHASE 3 — INFORMATION LAYER
+
+Add:
+
+- micro technical labels (JetBrains Mono)
+- callouts tied to product zones
+- progressive reveal
+
+--------------------------------
+
+PHASE 4 — DEPTH STACKING
+
+Introduce:
+
+- foreground obstruction layers
+- midground product
+- background volumetric field
+
+--------------------------------
+
+PHASE 5 — COMMERCIAL INTENT
+
+Add:
+
+- product name lockup
+- tagline
+- subtle CTA (non-intrusive)
+
+--------------------------------
+
+RULES:
+
+- NO WebGL yet
+- simulate everything with CSS + GSAP
+- maintain deterministic architecture
+- no React re-render loops
+- no object-in-JSX errors
+
+--------------------------------
+
+OUTPUT:
+
+- FULL FILE REPLACEMENTS
+- RenderLayer.tsx (expanded to multi-scene)
+- index.css (cinematic upgrade)
+- optional new components if needed
+
+--------------------------------
+
+GOAL:
+
+User must feel:
+
+"I am observing a physical system being revealed"
+
+NOT scrolling a page
+</logic>
+
+<prompt>
+Evolve the current cinematic scroll engine into a semantic product narrative system with clear product presence, layered material storytelling, and commercial-grade visual density.
+</prompt>
+
+<physics>
+Time: continuous
+Motion: inertial
+Light: constrained
+Depth: simulated
+</physics>s

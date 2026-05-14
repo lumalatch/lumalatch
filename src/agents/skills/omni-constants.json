@@ -1,0 +1,35 @@
+{
+  "luma_latch_engine": {
+    "material_science": {
+      "substrate": "High-tenacity Nylon 6-6",
+      "weave_pattern": "8-shaft herringbone twill",
+      "albedo_base": 0.05,
+      "roughness": 0.8,
+      "metalness": 0.0,
+      "opacity": 1.0,
+      "transmission": 0.0,
+      "comment": "100% opaque physical barrier. Light cannot penetrate the fiber."
+    },
+    "optical_physics": {
+      "emission_hex": "#B4FFC8",
+      "wavelength_nm": 520.4,
+      "luminance_mcd_m2": 300,
+      "light_behavior": "Volumetric Subsurface Scattering (SSS)",
+      "scotopic_void": "#050505",
+      "global_illumination": 0.0,
+      "secondary_bounce_suppression": true
+    },
+    "camera_rig": {
+      "lens_equivalent_mm": 100,
+      "type": "Macro",
+      "film_grain_iso": 0.03,
+      "frustum_culling": true,
+      "follow_cam_coupling": "scroll-velocity-linked"
+    },
+    "physics_engine": {
+      "easing_profile": "high-mass-inertia",
+      "cubic_bezier": [0.17, 0.67, 0.83, 0.67],
+      "scroll_mapping": "direct_wheel_delta_to_gsap_progress"
+    }
+  }
+}

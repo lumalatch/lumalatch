@@ -1,0 +1,47 @@
+```json
+{
+  "protocol": "AEC-V-2026-03",
+  "enforcement_level": "CRITICAL",
+  "prohibited": {
+    "visual": [
+      "ambient_light",
+      "chromatic_aberration",
+      "neon_effects",
+      "cyberpunk_aesthetic",
+      "glow_effect",
+      "bloom",
+      "gradients",
+      "continuous_emission",
+      "fiber_optic_lines",
+      "vertical_stripes",
+      "hud_overlay",
+      "scanlines"
+    ],
+    "css": [
+      "box-shadow",
+      "text-shadow",
+      "filter",
+      "backdrop-filter",
+      "mix-blend-mode",
+      "background-gradient",
+      "blur"
+    ],
+    "geometry": [
+      "border-radius",
+      "rounded-corners"
+    ]
+  },
+  "optical_model": {
+    "background": "#050505",
+    "wavelength_nm": 520,
+    "emission_color": "#B4FFC8",
+    "emission_behavior": "discrete_only",
+    "occlusion": "full_blocking_by_matte_fibers",
+    "allowed_pattern": "V-shaped discontinuous flecks only"
+  },
+  "material": {
+    "weave": "8-shaft herringbone",
+    "polymer": "Nylon 6-6",
+    "emitter": "SrAl2O4 crystalline core"
+  }
+}

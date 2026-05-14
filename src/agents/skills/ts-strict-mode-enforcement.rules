@@ -1,0 +1,65 @@
+# TypeScript Strict Enforcement — AEC-V-2026-03
+
+## 1. COMPILER REQUIREMENTS
+
+tsconfig.json must include:
+
+- "strict": true
+- "noImplicitAny": true
+- "strictNullChecks": true
+
+Zero errors tolerated.
+
+---
+
+## 2. PROHIBITIONS
+
+- any (explicit or implicit)
+- untyped props
+- mutable physics constants
+
+---
+
+## 3. BRANDED PHYSICS TYPES (MANDATORY)
+
+```ts
+declare const BRAND_WAVELENGTH: unique symbol;
+declare const BRAND_LUMINANCE: unique symbol;
+
+export type Wavelength = number & { [BRAND_WAVELENGTH]: true };
+export type Luminance = number & { [BRAND_LUMINANCE]: true };
+4. CONSTANT ENFORCEMENT
+export const LUMA_CONSTANTS = {
+  wavelength: 520 as Wavelength,
+  luminance: 300 as Luminance,
+  albedo: 0.05,
+  acquisitionLatency: 0.8
+} as const;
+readonly required
+no runtime mutation
+5. COMPONENT RULES
+
+All components must:
+
+use typed props via interface
+avoid default any inference
+avoid unnecessary state
+6. DATA FLOW
+physics constants imported only from:
+→ /types/physics.d.ts
+no duplication allowed
+7. FORBIDDEN PATTERNS
+magic numbers (except branded constants)
+inline physics values
+unit ambiguity (nm vs px etc.)
+8. RENDER DISCIPLINE
+
+React is used for:
+
+structure
+composition
+
+NOT for:
+
+physics simulation
+lighting logic
